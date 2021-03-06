@@ -4,3 +4,4 @@ function c() {
   this.a();
   this.b();
 }
+function f() { return 0; }
