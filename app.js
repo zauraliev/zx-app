@@ -7,3 +7,6 @@ function c() {
 function d() { this.c(); }
 function f() { return 0; }
 function g() { return 0; }
+function text(message) {
+  console.log(`${message} feature 002`);
+}
