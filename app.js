@@ -5,3 +5,4 @@ function c() {
   this.b();
 }
 function f() { return 0; }
+function g() { return 0; }
