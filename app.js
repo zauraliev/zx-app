@@ -14,3 +14,6 @@ function text(message) {
 function logger(log) {
   console.log(`${log}`);
 }
+function textAlert(message){
+  alert(`${message}`);
+}
