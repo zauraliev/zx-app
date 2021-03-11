@@ -11,3 +11,6 @@ function g() { return 0; }
 function text(message) {
   console.log(`${message} feature 002`);
 }
+function logger(log) {
+  console.log(`${log}`);
+}
