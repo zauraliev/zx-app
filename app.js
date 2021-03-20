@@ -1,5 +1,14 @@
+import { appRegisterService, appList } from './service.js'
 ;(function(){
   "use strict";
+
+  appRegisterService("newApp");
+
+  console.log("Apps => ", appList);
+
+  appList.forEach((element, i) => {
+    console.log(`Element${i} ${element}`)
+  });
   
   function a() { return 1;}
   function b() { return 1;}
