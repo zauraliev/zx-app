@@ -6,10 +6,30 @@ import { appRegisterService, appList } from './service.js'
 
   console.log("Apps => ", appList);
 
+  const apps = document.getElementById("app-list"); // app-list ul
+
   appList.forEach((element, i) => {
-    console.log(`Element${i} ${element}`)
-  });
+    logger(`Element${i} ${element}`);
+
+    let item = document.createElement("li"); // app-list li
+
+    item.appendChild(document.createTextNode(`${appList[i]} `)); // app-list li text
+    
+    let button = document.createElement('input');
+    button.id = `button-00${i}`;
+    button.type = 'button';
+    button.value = 'Get Info';
+    button.className = 'btn';
   
+    button.onclick = function() {
+      logger(appList[i]);
+    };
+
+    item.appendChild(button)
+
+    apps.appendChild(item)
+  });
+
   function a() { return 1;}
   function b() { return 1;}
   function c() {
