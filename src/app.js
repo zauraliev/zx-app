@@ -4,8 +4,11 @@ import Hello from './hello'
 
 ;(function(){
   "use strict";
-  
-  appRegisterService("newApp");
+  let _app = {
+    name: "zx-app",
+    id: "zx".padStart(10, "0")
+  }
+  appRegisterService(_app);
 
   console.log("Apps => ", appList);
 
@@ -20,20 +23,23 @@ import Hello from './hello'
   // hello.appendChild();
 
   appList.forEach((element, i) => {
-    logger(`Element${i} ${element}`);
+    logger(`Element${i} ${element.id}`);
 
     let item = document.createElement("li"); // app-list li
 
-    item.appendChild(document.createTextNode(`${appList[i]} >>> `)); // app-list li text
+    item.appendChild(document.createTextNode(`${appList[i].name} >>> `)); // app-list li text
     
+    // Get Info button
     let button = document.createElement('input');
     button.id = `button-00${i}`;
     button.type = 'button';
     button.value = 'Get Info';
     button.className = 'btn';
 
-    item.appendChild(button) // Adding button into app-list
+    // Appending Get Info button into app-list
+    item.appendChild(button) 
 
+    // Get Info button function
     button.onclick = function() {
 
       let span = document.createElement("span"); // app-list info span
@@ -41,13 +47,13 @@ import Hello from './hello'
     
       item.appendChild(span); // Adding app-list info span into app-list
 
-      logger(appList[i] + ' ' + span.id);
+      logger(`${appList[i].name} ${span.id}`);
 
-      document.getElementById(span.id).innerHTML = ` >>> ${appList[i]}`;
-      
+      document.getElementById(span.id).innerHTML = ' Loading... ';
+      setTimeout(()=> {
+        document.getElementById(span.id).innerHTML = ` >>> ${appList[i].id}`;
+      }, 500)
     };
-
-    
 
     apps.appendChild(item)
   });
