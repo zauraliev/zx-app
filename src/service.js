@@ -8,8 +8,4 @@ function appRegisterService(appName) {
   appList.push(appName);
 }
 
-function getAppList() {
-  return appList;
-}
-
-export { appList, appRegisterService, getAppList }
+export { appList, appRegisterService }
