@@ -2,17 +2,16 @@ var path = require('path')
 var HtmlWebpackPlugin = require('html-webpack-plugin')
 
 module.exports = {
-  mode: 'development',
-  // entry: './src/app.js',
+  mode: 'production',
   entry: { index: path.resolve(__dirname, 'src', 'app.js') },
   devServer: {
     // publicPath: '/',
-    contentBase: '/dist',
+    contentBase: '/public',
   },
   devtool: 'inline-source-map',
   output: {
     filename: 'app.js',
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname, 'public'),
     clean: true,
     publicPath: '/',
   },

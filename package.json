@@ -13,7 +13,8 @@
     "start": "webpack serve --open --port 5000",
     "server": "node server.js",
     "build": "webpack",
-    "dev": "webpack --mode development"
+    "dev": "webpack --mode development",
+    "deploy": "vercel"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
