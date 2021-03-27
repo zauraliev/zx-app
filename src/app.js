@@ -8,8 +8,8 @@ import { appRegisterService,
          getSelectedApp, 
          setSelectedApp,         
          updateAppName } from './service'
-import { uuidv4 } from '../util/util-functions';
-import FormValidator from '../util/form-validator';
+import { uuidv4 } from './util/util-functions';
+import FormValidator from './util/form-validator';
 
 ;(function(global){
   "use strict";
