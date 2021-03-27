@@ -9,7 +9,6 @@ import { appRegisterService,
          setSelectedApp,         
          updateAppName } from './service'
 import { uuidv4 } from '../util/util-functions';
-import Hello from './hello'
 import FormValidator from '../util/form-validator';
 
 ;(function(global){
@@ -35,8 +34,6 @@ import FormValidator from '../util/form-validator';
   getSelectedApp(); // initializing the getter
 
   function initialize() {
-
-    // appUpdateBtn.classList.add("hidden");
 
     appList.forEach((app, i) => {
       logger(`Element${i} ${app.id}`);
@@ -125,22 +122,39 @@ import FormValidator from '../util/form-validator';
 
     setSelectedApp(app);
 
-    selectedAppBadge.innerText = `${selectedApp.name}`;
-    selectedAppBadge.classList.remove('hidden');
+    selectedAppBadgeSwitch(selectedApp.name, true);
+    
     appNameInput.value = selectedApp.name;
 
     appNameInput.dispatchEvent(new Event('change', { 'bubbles': true }));
 
     isUpdate = true;
-    formBtn.value = "Update App";
-    formBtn.classList.add("btn-update");
-    formBtn.classList.remove("btn-register");
-
-    console.log(selectedApp);
-    const link = document.getElementById(`link-${selectedApp.id}`);
-    console.log(link.onclick)
+    
+    formBtnSwitch(isUpdate);
 
     return false;
+  }
+
+  function selectedAppBadgeSwitch(appName, toggle){
+    if(toggle) {
+      selectedAppBadge.innerText = `${appName}`;
+      selectedAppBadge.classList.remove('hidden');
+    } else {
+      selectedAppBadge.innerText = "";
+      selectedAppBadge.classList.add('hidden');
+    }
+  }
+
+  function formBtnSwitch(isUpdate) {
+    if(isUpdate){
+      formBtn.value = "Update App";
+      formBtn.classList.add("btn-update");
+      formBtn.classList.remove("btn-register");
+    } else {
+      formBtn.value = "Register App";
+      formBtn.classList.add("btn-register");          
+      formBtn.classList.remove("btn-update");
+    }
   }
 
   formBtn.onclick = function (e) {
@@ -152,37 +166,35 @@ import FormValidator from '../util/form-validator';
         if(!isAppNameValid(appNameInput.value)) return;
 
         if(!appExists) {
-          updateAppName(selectedApp.id, appNameInput.value)
+          updateAppName(selectedApp.id, appNameInput.value);
   
           apps.innerHTML = "";
-          selectedAppBadge.innerText = "";
-          selectedAppBadge.classList.add('hidden');
-          isUpdate = false;
+          
           initialize();
 
+          isUpdate = false;
+          
+          selectedAppBadgeSwitch(null, false);
+
           appNameInput.value = "";
-          formBtn.classList.remove("btn-update");
-          formBtn.classList.add("btn-register");
-          formBtn.value = "Register App";
+          
+          formBtnSwitch(isUpdate);
+
         } else {
-          textAlert(`Oops looks like the ${appNameInput.value} already exists!!!`)
+          textAlert(`Oops looks like the ${appNameInput.value} already exists!!!`);
         }
       }
 
     } else {
-
       if(appNameInput.value) {
-        registerApp(appNameInput.value)
+        registerApp(appNameInput.value);
       }
-
     }
-
-
   }
 
 
   function registerApp(appName) {
-    console.log(`Registering App => ${appName}`)
+    console.log(`Registering App => ${appName}`);
     
     const appExists = appList.some(app => app.name === appName);
 
@@ -194,11 +206,11 @@ import FormValidator from '../util/form-validator';
         id: uuidv4()
       };
       appRegisterService(app);
-      createListItem(app)
+      createListItem(app);
       appNameInput.value = "";
       appNameInput.dispatchEvent(new Event('change', { 'bubbles': true }));
     } else {
-      textAlert(`Oops looks like the ${appName} already exists!!!`)
+      textAlert(`Oops looks like the ${appName} already exists!!!`);
     }
   }
 
@@ -219,7 +231,7 @@ import FormValidator from '../util/form-validator';
   function logger(log) {
     console.log(`${log}`);
   }
-  function textAlert(message){
+  function textAlert(message) {
     alert(`${message}`);
   }
 })(window);

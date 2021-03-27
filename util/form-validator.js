@@ -18,8 +18,7 @@ class FormValidator {
     this.form.addEventListener('submit', event => {
       event.preventDefault();
       self.fields.forEach(field => {
-        const input = document.querySelector(`#${field}`)
-        console.log(input);
+        const input = document.querySelector(`#${field}`);
         self.validateFields(input);
       })
     })
@@ -30,14 +29,13 @@ class FormValidator {
 
     this.fields.forEach(field => {
       const input = document.querySelector(`#${field}`);
-      console.log(input);
 
       input.addEventListener('input', event => {
-        self.validateFields(input)
+        self.validateFields(input);
       })
 
       input.addEventListener('change', event => {
-        self.validateFields(input)
+        self.validateFields(input);
       })
 
     });
@@ -45,18 +43,17 @@ class FormValidator {
 
   setStatus(field, message, status){
     const errorIcon = field.parentElement.querySelector('.icon-error');
-    const errorMessage  = field.parentElement.querySelector('.error-message')
+    const errorMessage  = field.parentElement.querySelector('.error-message');
     
     if (status === "success") {
-      if (errorIcon) { errorIcon.classList.add('hidden') }
-      if (errorMessage) { errorMessage.innerText = "" }
-      field.classList.remove('input-error')
+      if (errorIcon) { errorIcon.classList.add('hidden'); }
+      if (errorMessage) { errorMessage.innerText = ""; }
+      field.classList.remove('input-error');
     } 
     
     if (status === "error") {
-      field.parentElement.querySelector('.error-message').innerText = message
-      // errorIcon.classList.remove('hidden')
-      field.classList.add('input-error')
+      field.parentElement.querySelector('.error-message').innerText = message;
+      field.classList.add('input-error');
     }    
   }
 
@@ -64,9 +61,9 @@ class FormValidator {
   validateFields(field) {
 
     if (field.value.trim() === '') {
-      this.setStatus(field, `cannot be blank`, 'error')
+      this.setStatus(field, `cannot be blank`, 'error');
     } else {
-      this.setStatus(field, null, 'success')
+      this.setStatus(field, null, 'success');
     }
 
   }
