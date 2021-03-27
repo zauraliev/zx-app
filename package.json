@@ -12,7 +12,7 @@
     "watch": "webpack --watch",
     "start": "webpack serve --open --port 5000",
     "server": "node server.js",
-    "build": "webpack",
+    "build": "webpack --config webpack.config.js",
     "dev": "webpack --mode development",
     "deploy": "vercel"
   },
