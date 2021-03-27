@@ -1,0 +1,15 @@
+.ripple {
+  animation: ripple 3s linear infinite;
+}
+.ripple::before,
+.ripple::after {
+  animation-delay:1s;
+}
+@keyframes ripple {
+  0% {
+    box-shadow: 0 0 0 .1rem rgba(36, 172, 235, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 0 .7rem rgba(255,255,255, 0);
+  }
+}
