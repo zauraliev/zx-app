@@ -1,5 +1,6 @@
 
-import './style.scss';
+import './css/animation.scss';
+import './css/style.scss';
 import { appRegisterService, 
          getAppList,
          appList, 

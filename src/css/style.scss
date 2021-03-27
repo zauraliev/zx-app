@@ -155,12 +155,6 @@ input {
   padding: 20px;
   border: 2px solid #e4dddd;
 }
-.flex-child:first-child  {
-  display: inline-flex;
-  align-items: center;
-  padding: 20px;
-  border: 2px solid #e4dddd;
-}
 
 .error-message {
   font-size: .85rem;
@@ -171,9 +165,9 @@ input {
 }
 
 .badge {
-  border: 1px solid #1976d2;
+  border: 1px solid #388fe6c4;
   // background-color: initial;
-  color: #1976d2;
+  color: #388fe6c4;
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 12pt;
