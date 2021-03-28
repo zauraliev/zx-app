@@ -9,11 +9,8 @@
   "license": "ISC",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "webpack --watch",
-    "start": "webpack serve --open --port 5000",
-    "server": "node server.js",
+    "serve": "webpack serve --open --port 5000",
     "build": "webpack",
-    "dev": "webpack --mode development",
     "deploy": "vercel"
   },
   "devDependencies": {

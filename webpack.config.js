@@ -8,7 +8,7 @@ module.exports = {
     // publicPath: '/',
     contentBase: '/public',
   },
-  devtool: 'inline-source-map',
+  devtool: false,
   output: {
     filename: 'app.js',
     path: path.resolve(__dirname, 'public'),
