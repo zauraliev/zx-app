@@ -15,8 +15,8 @@ jobs:
     runs-on: ${{matrix.os}}
     strategy:
       matrix: 
-        os: [ubuntu-latest,  windows-latest,  macOS-latest]
-        node-version: [12.x, 14.x, 15.x]
+        os: [ubuntu-latest]
+        node-version: [14.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
@@ -28,3 +28,11 @@ jobs:
     - run: npm ci
     - run: npm run build --if-present
     - run: npm test
+    
+    -name: Build and Push Docker Image
+     uses: mr-smithers-excellent/docker-build-push@v5
+     with:
+       image: zauraliev/zx-app
+       registry: docker.io
+       username: ${{ secrets.DOCKER_USERNAME }}
+       password: ${{ secrets.DOCKER_PASSWORD }}
