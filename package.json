@@ -10,6 +10,7 @@
   "scripts": {
     "test": "jest",
     "start": "webpack serve --port 5000 --host 0.0.0.0",
+    "dev": "webpack serve --open --port 5000",
     "build": "webpack",
     "deploy": "vercel"
   },
