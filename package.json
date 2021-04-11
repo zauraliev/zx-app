@@ -9,7 +9,7 @@
   "license": "ISC",
   "scripts": {
     "test": "jest",
-    "serve": "webpack serve --open --port 5000",
+    "start": "webpack serve --open --port 5000",
     "build": "webpack",
     "deploy": "vercel"
   },
