@@ -87,17 +87,17 @@ import FormValidator from './util/form-validator';
     return button;
   }
 
-  function getInfoBtn(destionation, app, btn) {
+  function getInfoBtn(parentTag, app, btn) {
     btn.onclick = function() {
-      fetchAppInfo(destionation, app)
+      fetchAppInfo(parentTag, app)
     };
   }
 
-  function fetchAppInfo(destination, app) {
+  function fetchAppInfo(parentTag, app) {
     let span = document.createElement("span"); // app-list info span
       span.id = `span-00${app.id}`;
     
-      destination.appendChild(span); // Adding app-list info span into app-list
+      parentTag.appendChild(span); // Adding app-list info span into app-list
 
       document.getElementById(span.id).innerHTML = ' Loading... ';
       setTimeout(()=> {
@@ -111,9 +111,9 @@ import FormValidator from './util/form-validator';
 
   function syncAll() {
     appList.forEach(app => {
-      let destinationId = `li-${app.id}`
-      let destination = document.getElementById(destinationId)
-      fetchAppInfo(destination, app)
+      let parentTagId = `li-${app.id}`
+      let parentTag = document.getElementById(parentTagId)
+      fetchAppInfo(parentTag, app)
     });
   }
 
@@ -192,7 +192,6 @@ import FormValidator from './util/form-validator';
     }
   }
 
-
   function registerApp(appName) {
     console.log(`Registering App => ${appName}`);
     
@@ -226,7 +225,6 @@ import FormValidator from './util/form-validator';
 
     return true;
   }
-  
 
   function logger(log) {
     console.log(`${log}`);
