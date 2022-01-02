@@ -6,7 +6,7 @@ class Hello {
   run() {
     this.target.innerHTML = `
       <p>
-        Hello from ECMAScript 2021
+        Hello from ECMAScript 2022
       </p>
     `;
   }
