@@ -14,7 +14,6 @@ class FormValidator {
 
   validateOnSubmit() {
     let self = this;
-
     this.form.addEventListener('submit', event => {
       event.preventDefault();
       self.fields.forEach(field => {
@@ -26,15 +25,16 @@ class FormValidator {
 
   validateOnEntry() {
     let self = this;
-
     this.fields.forEach(field => {
       const input = document.querySelector(`#${field}`);
 
       input.addEventListener('input', event => {
+        console.log('input', input.value)
         self.validateFields(input);
       })
 
       input.addEventListener('change', event => {
+        console.log('change', input.value)
         self.validateFields(input);
       })
 
@@ -58,14 +58,12 @@ class FormValidator {
   }
 
 
-  validateFields(field) {
-
+  validateFields(field, validated) {
     if (field.value.trim() === '') {
-      this.setStatus(field, `cannot be blank`, 'error');
+      return this.setStatus(field, `cannot be blank`, 'error');      
     } else {
-      this.setStatus(field, null, 'success');
+      return this.setStatus(field, null, 'success');
     }
-
   }
 
 }

@@ -176,10 +176,10 @@ import FormValidator from './util/form-validator';
           
           selectedAppBadgeSwitch(null, false);
 
-          appNameInput.value = "";
-          
           formBtnSwitch(isUpdate);
-
+          
+          appNameInput.value = "";
+          e.preventDefault();
         } else {
           textAlert(`Oops looks like the ${appNameInput.value} already exists!!!`);
         }
@@ -188,6 +188,7 @@ import FormValidator from './util/form-validator';
     } else {
       if(appNameInput.value) {
         registerApp(appNameInput.value);
+        e.preventDefault();
       }
     }
   }
@@ -207,7 +208,8 @@ import FormValidator from './util/form-validator';
       appRegisterService(app);
       createListItem(app);
       appNameInput.value = "";
-      appNameInput.dispatchEvent(new Event('change', { 'bubbles': true }));
+      
+      // appNameInput.dispatchEvent(new Event('change', { 'bubbles': true }));
     } else {
       textAlert(`Oops looks like the ${appName} already exists!!!`);
     }
