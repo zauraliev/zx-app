@@ -1,6 +1,6 @@
 {
   "name": "zx-app",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "App is for practicing the advanced Git commands",
   "productName": "ZX App",
   "author": "Zaur <zaur_aliev@hotmail.com>",
@@ -11,7 +11,7 @@
     "test": "jest -u",
     "test:cover": "jest --coverage=true",
     "open:coverage": "start ./coverage/lcov-report/index.html",
-    "start": "webpack serve --port 5000 --host 0.0.0.0",
+    "start": "webpack serve --port 5000 --host 0.0.0.0 --open --public localhost:5000",
     "dev": "webpack serve --open --port 5000",
     "build": "webpack",
     "deploy": "vercel"
