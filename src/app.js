@@ -8,7 +8,7 @@ import { appRegisterService,
          getSelectedApp, 
          setSelectedApp,         
          updateAppName } from './service'
-import { uuidv4 } from './util/util-functions';
+import { uuidv4, constructElement } from './util/util-functions';
 import FormValidator from './util/form-validator';
 
 ;(function(global){
@@ -46,45 +46,39 @@ import FormValidator from './util/form-validator';
 
   function createListItem(app) {
     let item = document.createElement("li"); // app-list li
-      item.id = `li-${app.id}`
-
-      let link = document.createElement("a");
-      link.id = `link-${app.id}`
-      link.href = "#";
-      link.className = "app-name-link"
-
-      link.appendChild(document.createTextNode(`${app.name}`));
-
-      link.onclick = () => editAppName(app);
-
-      item.appendChild(link); // app-list li text
-      item.appendChild(document.createTextNode(` >>> `));
-      
-      
-      // Get Info button
-      let btnProps = {
-        id: `button-${app.id}`,
-        type: 'button',
-        value: 'Get Info',
-        className: 'btn'
-      }
-
-      const btn = constructBtn(btnProps);
-
-      // Appending Get Info button into app-list
-      item.appendChild(btn) 
-
-      getInfoBtn(item, app, btn);
-
-      apps.prepend(item);
-  }
-
-  function constructBtn(btnProps) {
-    let button = document.createElement('input');
-    for(const property in btnProps) {
-      button[property] = btnProps[property];
+    item.id = `li-${app.id}`
+    
+    // Get Info link
+    let linkProps = {
+      id: `link-${app.id}`,
+      href: "#",
+      className: 'app-name-link',
+      onclick: () => editAppName(app),
     }
-    return button;
+    const link = constructElement(linkProps, 'a');
+
+    link.appendChild(document.createTextNode(`${app.name}`));
+    
+    item.appendChild(link); // app-list li text
+    item.appendChild(document.createTextNode(` >>> `));
+    
+    
+    // Get Info button
+    let btnProps = {
+      id: `button-${app.id}`,
+      type: 'button',
+      value: 'Get Info',
+      className: 'btn'
+    }
+
+    const btn = constructElement(btnProps, 'input');
+
+    // Appending Get Info button into app-list
+    item.appendChild(btn) 
+
+    getInfoBtn(item, app, btn);
+
+    apps.prepend(item);
   }
 
   function getInfoBtn(parentTag, app, btn) {

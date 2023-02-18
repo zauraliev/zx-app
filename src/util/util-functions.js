@@ -6,6 +6,12 @@ const uuidv4 = function () {
   );
 }
 
+function constructElement(elementProps, elementType) {
+  let element = document.createElement(elementType);
+  for (const property in elementProps) {
+    element[property] = elementProps[property];
+  }
+  return element;
+}
 
-
-export { uuidv4 };
+export { uuidv4, constructElement };
