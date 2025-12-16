@@ -5,8 +5,7 @@ module.exports = {
   mode: 'production',
   entry: { index: path.resolve(__dirname, 'src', 'app.js') },
   devServer: {
-    // publicPath: '/',
-    contentBase: '/public',
+    static: 'public',
   },
   devtool: false,
   output: {
@@ -23,7 +22,7 @@ module.exports = {
         use: {
           loader: "babel-loader",
           options: {
-            presets: ["babel-preset-env"]
+            presets: ["@babel/preset-env"]
           }
         }
       },
