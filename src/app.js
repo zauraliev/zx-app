@@ -13,7 +13,7 @@ import FormValidator from './util/form-validator';
 
 ;(function(global){
   "use strict";
-  
+  console.log('MY_VAR: ', process.env.MY_VAR || "NO VALUE");
   const apps = document.getElementById("app-list");
   const syncAllBtn = document.getElementById("sync-all");
   const appNameInput = document.getElementById("app-name");
