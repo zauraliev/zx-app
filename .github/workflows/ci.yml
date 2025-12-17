@@ -33,7 +33,7 @@ jobs:
         run: npm test
 
       - name: Build and Push Docker Image
-        uses: mr-smithers-excellent/docker-build-push@v5
+        uses: mr-smithers-excellent/docker-build-push@v6
         with:
           image: zauraliev/zx-app
           tags: latest,${{ github.sha }}
