@@ -28,7 +28,6 @@
     "babel-loader": "^10.0.0",
     "cache-loader": "^4.1.0",
     "css-loader": "^7.1.2",
-    "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "html-webpack-plugin": "^5.3.1",
     "jest": "^30.2.0",
@@ -39,5 +38,8 @@
     "webpack-cli": "^6.0.1",
     "webpack-dev-middleware": "^7.4.5",
     "webpack-dev-server": "^5.2.2"
+  },
+  "dependencies": {
+    "@dotenvx/dotenvx": "^1.51.2"
   }
 }
