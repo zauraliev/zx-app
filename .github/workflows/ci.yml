@@ -27,7 +27,7 @@ jobs:
         run: curl -sfS https://dotenvx.sh/install.sh | sh
         
       - name: Run Webpack Config with DotenvX
-        run: dotenvx run -- node ../webpack.config.js
+        run: dotenvx run -- node build.js
         env:
           DOTENV_PRIVATE_KEY: ${{ secrets.DOTENV_PRIVATE_KEY }}
 
