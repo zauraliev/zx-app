@@ -35,7 +35,9 @@ jobs:
         run: npm ci --force
 
       - name: Build
-        run: npm run build --if-present
+        run: npx dotenvx run -- npm run build --if-present
+        env:
+          DOTENV_PRIVATE_KEY: ${{ secrets.DOTENV_PRIVATE_KEY }}
 
       - name: Test
         run: npm test
