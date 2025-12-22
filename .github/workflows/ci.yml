@@ -23,9 +23,11 @@ jobs:
           node-version: 24.x
           cache: npm
 
-      - name: Load private environment variables    
+      - name: Install DotenvX
         run: curl -sfS https://dotenvx.sh/install.sh | sh
-             dotenvx run -- node webpack.config.js
+        
+      - name: Run Webpack Config with DotenvX
+        run: dotenvx run -- node webpack.config.js
         env:
           DOTENV_PRIVATE_KEY: ${{ secrets.DOTENV_PRIVATE_KEY }}
 
