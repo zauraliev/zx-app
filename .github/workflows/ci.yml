@@ -22,7 +22,10 @@ jobs:
         with:
           node-version: 24.x
           cache: npm
-
+      - run: curl -sfS https://dotenvx.sh/install.sh | sh
+      - run: dotenvx run -- node build.js
+        env:
+         DOTENV_PRIVATE_KEY: ${{ secrets.DOTENV_PRIVATE_KEY }}
       - name: Install dependencies
         run: npm ci --force
 
