@@ -3,8 +3,6 @@ var HtmlWebpackPlugin = require('html-webpack-plugin')
 const webpack = require('webpack');
 require("@dotenvx/dotenvx").config();
 
-console.log("MY_VAR: ", process.env.MY_VAR || "NO VALUE");
-
 module.exports = {
   mode: 'production',
   entry: { index: path.resolve(__dirname, 'src', 'app.js') },
