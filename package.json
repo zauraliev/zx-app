@@ -40,6 +40,8 @@
     "webpack-dev-server": "^5.2.2"
   },
   "dependencies": {
-    "@dotenvx/dotenvx": "^1.51.2"
+    "@dotenvx/dotenvx": "^1.51.2",
+    "glob": "^13.0.0",
+    "rimraf": "^6.1.2"
   }
 }
