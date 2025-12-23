@@ -4,17 +4,17 @@ const webpack = require('webpack');
 require("@dotenvx/dotenvx").config();
 
 module.exports = {
-  mode: 'production',
-  entry: { index: path.resolve(__dirname, 'src', 'app.js') },
+  mode: "production",
+  entry: { index: path.resolve(__dirname, "src", "app.js") },
   devServer: {
-    static: 'public',
+    static: "public",
   },
   devtool: false,
   output: {
-    filename: 'app.js',
-    path: path.resolve(__dirname, 'public'),
+    filename: "app.js",
+    path: path.resolve(__dirname, "public"),
     clean: true,
-    publicPath: '/',
+    publicPath: "/",
   },
   module: {
     rules: [
@@ -24,28 +24,33 @@ module.exports = {
         use: {
           loader: "babel-loader",
           options: {
-            presets: ["@babel/preset-env"]
-          }
-        }
+            presets: ["@babel/preset-env"],
+          },
+        },
       },
       {
         test: /\.s[ac]ss$/i,
         use: [
           // Creates `style` nodes from JS strings
           "style-loader",
-          "cache-loader",
           // Translates CSS into CommonJS
           "css-loader",
           // Compiles Sass to CSS
           "sass-loader",
         ],
-      }
-    ]
+      },
+    ],
   },
-  plugins: [new HtmlWebpackPlugin({ inject:false,
-                                    template: path.resolve(__dirname, 'src', 'index.html')}),
-            new webpack.DefinePlugin({
-                'process.env.MY_VAR': JSON.stringify(process.env.MY_VAR),
-            }),
-  ]
-}
+  cache: {
+    type: "filesystem", // This replaces cache-loader
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      inject: false,
+      template: path.resolve(__dirname, "src", "index.html"),
+    }),
+    new webpack.DefinePlugin({
+      "process.env.MY_VAR": JSON.stringify(process.env.MY_VAR),
+    }),
+  ],
+};
