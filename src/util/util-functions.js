@@ -21,4 +21,6 @@ function constructElement(elementProps, elementType) {
   return element;
 }
 
-export { uuidv4, constructElement, newUUID };
+const validateEmail = (email) => email.includes("@");
+const formatDate = (date) => date.toLocaleDateString();
+export { uuidv4, constructElement, newUUID, validateEmail, formatDate };
