@@ -55,7 +55,7 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       inject: false, // set to true if you want scripts injected automatically
-      template: path.resolve(__dirname, "src", "index.html"),
+      template: path.resolve(__dirname, "src", "index.html")
     }),
     new webpack.DefinePlugin({
       "process.env.MY_VAR": JSON.stringify(process.env.MY_VAR),
