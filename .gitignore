@@ -4,3 +4,4 @@ public/
 coverage/
 .vercel
 .env.keys
+.env*.local

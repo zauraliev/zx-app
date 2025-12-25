@@ -1,6 +1,7 @@
 {
   "name": "zx-app",
-  "version": "1.1.0",
+  "version": "1.1.1",
+  "type": "module",
   "description": "App is for practicing the advanced Git commands",
   "productName": "ZX App",
   "author": "Zaur <zaur_aliev@hotmail.com>",
@@ -14,15 +15,18 @@
     "test": "jest -u",
     "test:cover": "jest --coverage=true",
     "open:coverage": "start ./coverage/lcov-report/index.html",
-    "start": "webpack serve --port 5000 --host 0.0.0.0 --open --client-web-socket-url http://localhost:5000",
-    "dev": "webpack serve --open --port 5000",
-    "build": "webpack --config webpack.config.js",
+    "start": "webpack serve --port 5000 --host 0.0.0.0 --client-web-socket-url http://localhost:5000",
+    "frontend": "webpack serve --host 127.0.0.1",
+    "dev": "webpack serve",
+    "vercel": "dotenvx run -f .env.local.encrypted -- vercel dev",
+    "build": "webpack --config webpack.config.cjs",
     "deploy": "vercel"
   },
   "devDependencies": {
     "@babel/cli": "^7.28.3",
     "@babel/core": "^7.28.5",
     "@babel/preset-env": "^7.28.5",
+    "@dotenvx/dotenvx": "^1.51.2",
     "babel-core": "^7.0.0-bridge.0",
     "babel-jest": "^30.2.0",
     "babel-loader": "^10.0.0",
@@ -32,8 +36,9 @@
     "glob": "^13.0.0",
     "html-webpack-plugin": "^5.3.1",
     "jest": "^30.2.0",
+    "mini-css-extract-plugin": "^2.9.4",
     "rimraf": "^6.1.2",
-    "sass": "^1.32.8",
+    "sass": "^1.97.1",
     "sass-loader": "^16.0.6",
     "style-loader": "^4.0.0",
     "webpack": "^5.27.1",
@@ -42,7 +47,7 @@
     "webpack-dev-server": "^5.2.2"
   },
   "dependencies": {
-    "@dotenvx/dotenvx": "^1.51.2"
+    "jsonwebtoken": "^9.0.3"
   },
   "overrides": {
     "glob": "^13.0.0",
