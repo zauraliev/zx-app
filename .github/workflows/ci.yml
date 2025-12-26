@@ -27,7 +27,7 @@ jobs:
         run: curl -sfS https://dotenvx.sh/install.sh | sh
         
       - name: Run Webpack Config with DotenvX
-        run: npx dotenvx run -f .env.local.encrypted -- node build.js
+        run: dotenvx run -f .env.local.encrypted -- node build.js
         env:
           DOTENV_PRIVATE_KEY_LOCAL_ENCRYPTED: ${{ secrets.DOTENV_PRIVATE_KEY_LOCAL_ENCRYPTED }}
 
@@ -35,7 +35,7 @@ jobs:
         run: npm ci --force
 
       - name: Build with encrypted env
-        run: npx dotenvx run -f .env.local.encrypted -- npm run build --if-present
+        run: dotenvx run -f .env.local.encrypted -- npm run build --if-present
         env:
           DOTENV_PRIVATE_KEY_LOCAL_ENCRYPTED: ${{ secrets.DOTENV_PRIVATE_KEY_LOCAL_ENCRYPTED }}
 
