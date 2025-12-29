@@ -1,9 +1,15 @@
-const path = require("path");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
-const webpack = require("webpack");
-const MiniCssExtractPlugin = require("mini-css-extract-plugin"); // <- fix
+import HtmlWebpackPlugin from "html-webpack-plugin";
+import webpack from "webpack";
+import MiniCssExtractPlugin from "mini-css-extract-plugin";
 
-module.exports = {
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
+export default {
   mode: process.env.NODE_ENV || "development",
   entry: { index: path.resolve(__dirname, "src", "app.js") },
   devServer: {

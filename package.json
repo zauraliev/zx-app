@@ -1,6 +1,6 @@
 {
   "name": "zx-app",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "type": "module",
   "description": "App is for practicing the advanced Git commands",
   "productName": "ZX App",
@@ -17,9 +17,9 @@
     "open:coverage": "start ./coverage/lcov-report/index.html",
     "start": "webpack serve --port 5000 --host 0.0.0.0 --client-web-socket-url http://localhost:5000",
     "frontend": "webpack serve --host 127.0.0.1",
-    "dev": "webpack serve",
+    "local": "webpack serve",
     "vercel": "dotenvx run -f .env.local.encrypted -- vercel dev",
-    "build": "webpack --config webpack.config.cjs",
+    "build": "webpack --config webpack.config.mjs",
     "deploy": "vercel"
   },
   "devDependencies": {
