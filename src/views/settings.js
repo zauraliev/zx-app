@@ -1,3 +1,4 @@
+import { navigateTo } from "../router.js";
 export function renderSettings() {
   return `
     <div class="settings">
@@ -6,4 +7,7 @@ export function renderSettings() {
   `;
 }
 
-export function initSettings() {}
+export function initSettings() {
+  // MENU handles this now
+}
+

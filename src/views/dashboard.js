@@ -1,3 +1,4 @@
+import { navigateTo } from "../router.js"; // Use the new helper
 import { startApp } from "../app-init.js";
 
 export function renderDashboard() {
@@ -34,19 +35,17 @@ export function renderDashboard() {
       </div>
       <br />
       <input id="sync-all" type="button" class="btn" value="Sync All" />
-      <input id="go-settings" type="button" class="btn" value="Settings" />
   `;
 }
 
-export function initDashboard(container) {
-  startApp(container);
+export function initDashboard() {
+  startApp(); // Re-binds your app logic to the new HTML
 
-  const goSettings = container.querySelector("#go-settings");
-  goSettings.onclick = (e) => {
-    e.stopPropagation();
-    history.pushState({}, "", "/settings");
-    window.dispatchEvent(new PopStateEvent("popstate"));
-  };
+  // REMOVED: e.stopPropagation();
+  // Reason: Not needed here as there are no parent click listeners to block.
+
+  // REMOVED: window.dispatchEvent(new PopStateEvent("popstate"));
+  // Reason: Hacky. navigateTo() handles the URL change and the Render in one step.
+  // MENU handles this now
 }
-
 

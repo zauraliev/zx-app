@@ -11,19 +11,22 @@ import {
 import { uuidv4, constructElement } from "./util/util-functions.js";
 import FormValidator from "./util/form-validator.js";
 
-export function startApp(container) {
+export function startApp() {
   console.log("MY_VAR: ", process.env.MY_VAR || "NO VALUE");
 
-  const apps = container.querySelector("#app-list");
-  const syncAllBtn = container.querySelector("#sync-all");
-  const appNameInput = container.querySelector("#app-name");
-  const selectedAppBadge = container.querySelector("#selected-app");
-  const formBtn = container.querySelector("#form-btn");
+  if (apps) apps.innerHTML = "";
+
+  const container = document.querySelector(".container");
+  const apps = document.getElementById("app-list");
+  const syncAllBtn = document.getElementById("sync-all");
+  const appNameInput = document.getElementById("app-name");
+  const selectedAppBadge = document.getElementById("selected-app");
+  const formBtn = document.getElementById("form-btn");
 
   let isUpdate = false;
   let isSyncAll = false;
 
-  const form = container.querySelector(".form");
+  const form = document.querySelector(".form");
   const fields = ["app-name"];
   new FormValidator(form, fields).initialize();
 
@@ -32,13 +35,12 @@ export function startApp(container) {
   getSelectedApp();
 
   function initialize() {
-    appList.forEach((app) => createListItem(app, container));
+    appList.forEach(createListItem);
   }
-  
+
   initialize();
 
-  function createListItem(app, container) {
-    const apps = container.querySelector("#app-list");
+  function createListItem(app) {
     let item = document.createElement("li"); // app-list li
     item.id = `li-${app.id}`;
 
@@ -47,7 +49,10 @@ export function startApp(container) {
       id: `link-${app.id}`,
       href: "#",
       className: "app-name-link",
-      onclick: () => editAppName(app, container),
+      onclick: (e) => {
+        e.preventDefault();
+        editAppName(app);
+      },
     };
     const link = constructElement(linkProps, "a");
 
@@ -69,21 +74,21 @@ export function startApp(container) {
     // Appending Get Info button into app-list
     item.appendChild(btn);
 
-    getInfoBtn(item, app, btn, container);
+    getInfoBtn(item, app, btn);
 
     apps.prepend(item);
 
-    syncAll(container); // sync all initialization
+    syncAll(); // sync all initialization
   }
 
-  function getInfoBtn(parentTag, app, btn, container) {
+  function getInfoBtn(parentTag, app, btn) {
     let count = 0;
     let isProcessing = false;
     btn.onclick = async function (e) {
       e.stopPropagation();
       if (isProcessing) return;
       isProcessing = true;
-      fetchAppInfo(parentTag, app, container).then((app) => {
+      fetchAppInfo(parentTag, app).then((app) => {
         isProcessing = false;
         count++;
         console.log(app, "Count => ", count);
@@ -91,7 +96,7 @@ export function startApp(container) {
     };
   }
 
-  function fetchAppInfo(parentTag, app, container) {
+  function fetchAppInfo(parentTag, app) {
     let span = document.createElement("span"); // app-list info span
     span.id = `span-00${app.id}`;
 
@@ -109,7 +114,7 @@ export function startApp(container) {
     });
   }
 
-  function syncAll(container) {
+  function syncAll() {
     try {
       let count = 0;
       let isProcessing = false;
@@ -121,7 +126,7 @@ export function startApp(container) {
         appList.forEach((app) => {
           let parentTagId = `li-${app.id}`;
           let parentTag = document.getElementById(parentTagId);
-          fetchAppInfo(parentTag, app, container).then((app) => {
+          fetchAppInfo(parentTag, app).then((app) => {
             isProcessing = false;
             count++;
             console.log(app, "Count => ", count);
@@ -134,27 +139,29 @@ export function startApp(container) {
     }
   }
 
-  function editAppName(app, container) {
+  function editAppName(app) {
     // let app = appList.find(app => app.id === appId);
-
-    const appNameInput = container.querySelector("#app-name");
-    const selectedAppBadge = container.querySelector("#selected-app");
-    const formBtn = container.querySelector("#form-btn");
 
     setSelectedApp(app);
 
-    selectedAppBadge.innerText = selectedApp.name;
-    selectedAppBadge.classList.remove("hidden");
+    const nameInput = document.getElementById("app-name");
+    const badge = document.getElementById("selected-app");
+    const btn = document.getElementById("form-btn");
 
-    appNameInput.value = selectedApp.name;
-    appNameInput.dispatchEvent(new Event("change", { bubbles: true }));
+    if (nameInput) {
+      nameInput.value = app.name;
+      nameInput.focus();
 
-    isUpdate = true;
-    formBtn.value = "Update App";
-    formBtn.classList.add("btn-update");
-    formBtn.classList.remove("btn-register");
+      badge.innerText = app.name;
+      badge.classList.remove("hidden");
 
-    return true;
+      // Important: Update the local variable used by the submit logic
+      isUpdate = true;
+
+      btn.value = "Update App";
+      btn.classList.add("btn-update");
+      btn.classList.remove("btn-register");
+    }
   }
 
   function selectedAppBadgeSwitch(appName, toggle) {
@@ -275,22 +282,22 @@ export function startApp(container) {
     alert(`${message}`);
   }
 
-  let logoutBtn = container.querySelector("#logout-btn");
-  if (!logoutBtn) {
-    logoutBtn = document.createElement("input");
-    logoutBtn.id = "logout-btn";
-    logoutBtn.value = "Logout";
-    logoutBtn.className = "btn";
-    logoutBtn.type = "button";
-    logoutBtn.onclick = () => {
-      localStorage.clear();
-      history.replaceState({}, "", "/login");
-      window.dispatchEvent(new PopStateEvent("popstate"));
-    };
-    container.appendChild(logoutBtn);
-  }
-}
+  // Logout button
+  const logoutBtn = document.createElement("input");
+  logoutBtn.value = "Logout";
+  logoutBtn.type = "button";
+  logoutBtn.className = "btn";
+  logoutBtn.onclick = () => {
+    localStorage.removeItem("isLoggedIn");
 
+    // REMOVED: location.reload();
+    // Reason: Reloading kills the SPA feel. navigateTo handles the swap cleanly.
+
+    import("./router.js").then((m) => m.navigateTo("/login"));
+  };
+
+  container.appendChild(logoutBtn);
+}
 
 
 

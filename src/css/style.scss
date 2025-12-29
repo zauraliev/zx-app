@@ -229,3 +229,38 @@ h2 {
     margin-top: 1rem;
     font-size: 0.9rem;
 }
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px); // Glassmorphism effect
+  border-bottom: 1px solid #eee;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+
+  .logo {
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1.5rem;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 20px;
+    list-style: none;
+
+    li {
+      cursor: pointer;
+      font-weight: 500;
+      transition: color 0.3s;
+
+      &:hover {
+        color: #007bff;
+      }
+    }
+  }
+}
