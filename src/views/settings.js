@@ -1,4 +1,3 @@
-import { navigateTo } from "../router.js";
 export function renderSettings() {
   return `
     <div class="settings">

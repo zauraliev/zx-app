@@ -1,4 +1,3 @@
-import { navigateTo } from "../router.js"; // Use the new helper
 import { startApp } from "../app-init.js";
 
 export function renderDashboard() {

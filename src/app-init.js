@@ -281,22 +281,6 @@ export function startApp() {
   function textAlert(message) {
     alert(`${message}`);
   }
-
-  // Logout button
-  const logoutBtn = document.createElement("input");
-  logoutBtn.value = "Logout";
-  logoutBtn.type = "button";
-  logoutBtn.className = "btn";
-  logoutBtn.onclick = () => {
-    localStorage.removeItem("isLoggedIn");
-
-    // REMOVED: location.reload();
-    // Reason: Reloading kills the SPA feel. navigateTo handles the swap cleanly.
-
-    import("./router.js").then((m) => m.navigateTo("/login"));
-  };
-
-  container.appendChild(logoutBtn);
 }
 
 

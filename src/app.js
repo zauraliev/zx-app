@@ -5,9 +5,9 @@ import { router } from "./router.js";
 (function () {
   "use strict";
 
-  // Initial render
-  window.addEventListener("DOMContentLoaded", router);
+  // CHANGE: Wrap in an anonymous function so the Event object isn't passed as 'path'
+  window.addEventListener("DOMContentLoaded", () => router());
 
-  // Handle browser navigation
-  window.addEventListener("popstate", router);
+  // CHANGE: Do the same for popstate
+  window.addEventListener("popstate", () => router());
 })();
