@@ -1,4 +1,4 @@
-import { uuidv4 } from "./util/util-functions.js";
+// src/service.js
 import data from "./statics/data.js";
 ("use strict");
 

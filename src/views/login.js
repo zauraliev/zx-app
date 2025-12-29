@@ -1,5 +1,8 @@
-
-export const loginUI = `
+import { authenticate } from "../service.js";
+import { router } from "../router.js";
+// Export the string for app.js to use
+export function renderLogin() {
+  return `
     <h2 style="text-align: center">Login</h2>
     <form id="login-form" class="form">
         <div class="input-group">
@@ -10,9 +13,9 @@ export const loginUI = `
         <p id="err" style="text-align: center; color: red;"></p>
     </form>
 `;
-import { authenticate } from "./service.js";
+}
 
-export function initLogin(onSuccess) {
+export function initLogin() {
   const form = document.getElementById("login-form");
   if (!form) return;
 
@@ -29,7 +32,9 @@ export function initLogin(onSuccess) {
     const isAuthorized = await authenticate(username, password);
 
     if (isAuthorized) {
-      onSuccess(); // Redirect or show protected UI
+      localStorage.setItem("isLoggedIn", "true"); 
+      history.pushState({}, "", "/");
+      router(); // Redirect or show protected UI
     } else {
       if (errEl) errEl.innerText = "Access Denied: Invalid Credentials";
     }
@@ -37,7 +42,3 @@ export function initLogin(onSuccess) {
     return false;
   };
 }
-
-
-
-
