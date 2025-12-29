@@ -272,16 +272,16 @@ export function startApp() {
           if (errEl) errEl.innerText = "";
 
           /**
-           * CHANGED: Using getSyncAllStatus() check
-           * REASON: Properly checks the global state after name update.
+           * THE FIX FOR UPDATE:
+           * We do NOT call syncAllBtn.click() here. Instead, we manually
+           * restore the sync state for only those that had it.
            */
           if (getSyncAllStatus()) {
-            syncAllBtn.click();
-          } else {
             appList.forEach((app) => {
+              // ONLY restore sync if the app was already synced.
+              // If it was a new registered app with isSynced: false, it stays false.
               if (app.isSynced) {
-                let parentTagId = `li-${app.id}`;
-                let parentTag = document.getElementById(parentTagId);
+                const parentTag = document.getElementById(`li-${app.id}`);
                 fetchAppInfo(parentTag, app);
               }
             });
@@ -342,4 +342,5 @@ export function startApp() {
     return true;
   }
 }
+
 
