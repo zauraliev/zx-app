@@ -1,3 +1,4 @@
+// app-init.js
 import {
   appRegisterService,
   getAppList,
@@ -6,6 +7,9 @@ import {
   getSelectedApp,
   setSelectedApp,
   updateAppName,
+  // ADDED: Imports to allow state to survive navigation to/from Settings
+  getSyncAllStatus,
+  setSyncAllStatus,
 } from "./service.js";
 
 import { uuidv4, constructElement } from "./util/util-functions.js";
@@ -13,8 +17,6 @@ import FormValidator from "./util/form-validator.js";
 
 export function startApp() {
   console.log("MY_VAR: ", process.env.MY_VAR || "NO VALUE");
-
-  if (apps) apps.innerHTML = "";
 
   const container = document.querySelector(".container");
   const apps = document.getElementById("app-list");
@@ -24,15 +26,23 @@ export function startApp() {
   const formBtn = document.getElementById("form-btn");
 
   let isUpdate = false;
-  let isSyncAll = false;
+
+  /**
+   * REMOVED: let isSyncAll = false;
+   * REASON: This local variable is destroyed when you navigate to Settings.
+   * REPLACEMENT: We now use getSyncAllStatus() and setSyncAllStatus() from service.js.
+   */
 
   const form = document.querySelector(".form");
   const fields = ["app-name"];
   new FormValidator(form, fields).initialize();
 
+  // 1. PRESERVED INITIALIZERS
   console.log("Apps => ", getAppList());
-
   getSelectedApp();
+
+  // PRESERVED: DOM cleanup logic
+  if (apps) apps.innerHTML = "";
 
   function initialize() {
     appList.forEach(createListItem);
@@ -40,28 +50,63 @@ export function startApp() {
 
   initialize();
 
+  // 2. THE LOGIC ENGINE (Preserving count and isProcessing)
+  function runSyncAllLogic(isManualClick = false) {
+    let count = 0;
+    let isProcessing = false;
+
+    appList.forEach((app) => {
+      // THE FIX: Manual click syncs all. Re-hydration (false) skips unsynced apps.
+      if (isManualClick || app.isSynced) {
+        let parentTagId = `li-${app.id}`;
+        let parentTag = document.getElementById(parentTagId);
+        fetchAppInfo(parentTag, app).then((app) => {
+          isProcessing = false;
+          count++;
+          console.log(app, "Count => ", count);
+        });
+      }
+    });
+  }
+
+  // 3. THE BUTTON CLICK: Sets global state and runs logic
+  syncAllBtn.onclick = function (e) {
+    setSyncAllStatus(true); // Persist state globally
+    e.stopPropagation();
+    runSyncAllLogic(true); // 'true' means manual sync all
+  };
+
+  // 4. RE-HYDRATION: Check global state when returning from Settings
+  if (getSyncAllStatus()) {
+    console.log("Global SyncAll active: Restoring state...");
+    // Using runSyncAllLogic directly as you noted syncAllBtn.click() can fail timing
+    runSyncAllLogic(false); // 'false' ensures we skip newly registered apps
+  }
+
+  // 5. REGISTER APP (Preserving your captured reference)
   function createListItem(app) {
-    let item = document.createElement("li"); // app-list li
+    let item = document.createElement("li");
     item.id = `li-${app.id}`;
 
-    // Get Info link
     let linkProps = {
       id: `link-${app.id}`,
       href: "#",
       className: "app-name-link",
       onclick: (e) => {
+        /**
+         * ADDED: e.preventDefault();
+         * REASON: Stops the browser from jumping to top/adding "#" to URL on click.
+         */
         e.preventDefault();
         editAppName(app);
       },
     };
     const link = constructElement(linkProps, "a");
-
     link.appendChild(document.createTextNode(`${app.name}`));
 
-    item.appendChild(link); // app-list li text
+    item.appendChild(link);
     item.appendChild(document.createTextNode(` >>> `));
 
-    // Get Info button
     let btnProps = {
       id: `button-${app.id}`,
       type: "button",
@@ -70,15 +115,14 @@ export function startApp() {
     };
 
     const btn = constructElement(btnProps, "input");
-
-    // Appending Get Info button into app-list
     item.appendChild(btn);
 
     getInfoBtn(item, app, btn);
-
     apps.prepend(item);
 
-    syncAll(); // sync all initialization
+    // --- CRUCIAL ADDITION ---
+    return item;
+    // REASON: This allows registerApp to use the element immediately without a DOM lookup.
   }
 
   function getInfoBtn(parentTag, app, btn) {
@@ -97,19 +141,28 @@ export function startApp() {
   }
 
   function fetchAppInfo(parentTag, app) {
-    let span = document.createElement("span"); // app-list info span
+    // ADD THIS GUARD: Prevents the "Cannot read properties of undefined" crash
+    if (!parentTag) {
+      console.error(
+        "fetchAppInfo failed: parentTag is undefined for app",
+        app.id
+      );
+      return Promise.reject("Invalid parentTag");
+    }
+
+    let span = document.createElement("span");
     span.id = `span-00${app.id}`;
+    parentTag.appendChild(span);
 
-    parentTag.appendChild(span); // Adding app-list info span into app-list
-
-    document.getElementById(span.id).innerHTML = " Loading... ";
+    const spanEl = document.getElementById(span.id);
+    if (spanEl) spanEl.innerHTML = " Loading... ";
 
     return new Promise(async function (resolve) {
-      //The Safety Standard; blocks legacy mobile "ghost" clicks and accidental double-taps.
       setTimeout(() => {
-        document.getElementById(span.id).innerHTML = ` >>> ${app.id}`;
+        const updateEl = document.getElementById(span.id);
+        if (updateEl) updateEl.innerHTML = ` >>> ${app.id}`;
         app.isSynced = true;
-        resolve(app); // Return the updated app data
+        resolve(app);
       }, 300);
     });
   }
@@ -119,7 +172,8 @@ export function startApp() {
       let count = 0;
       let isProcessing = false;
       syncAllBtn.onclick = function (e) {
-        isSyncAll = true;
+        setSyncAllStatus(true); // Turn on global sync mode
+
         e.stopPropagation();
         if (isProcessing) return;
         isProcessing = true;
@@ -134,33 +188,33 @@ export function startApp() {
         });
       };
     } catch (error) {
-      isSyncAll = false;
+      // CHANGED: Update global state on error
+      // setSyncAllStatus(false);
       console.log(error);
     }
   }
 
-  function editAppName(app) {
-    // let app = appList.find(app => app.id === appId);
+  syncAll();
 
+  function editAppName(app) {
     setSelectedApp(app);
 
+    /**
+     * ADDED: Manual re-query of elements
+     * REASON: Ensures the script targets the NEW elements created by the 2025 router,
+     * preventing "stale reference" bugs.
+     */
     const nameInput = document.getElementById("app-name");
     const badge = document.getElementById("selected-app");
     const btn = document.getElementById("form-btn");
 
     if (nameInput) {
       nameInput.value = app.name;
-      nameInput.focus();
-
-      badge.innerText = app.name;
-      badge.classList.remove("hidden");
-
-      // Important: Update the local variable used by the submit logic
+      selectedAppBadgeSwitch(app.name, true);
+      nameInput.dispatchEvent(new Event("change", { bubbles: true }));
       isUpdate = true;
-
-      btn.value = "Update App";
-      btn.classList.add("btn-update");
-      btn.classList.remove("btn-register");
+      formBtnSwitch(isUpdate);
+      nameInput.focus();
     }
   }
 
@@ -203,18 +257,26 @@ export function startApp() {
           initialize();
 
           isUpdate = false;
-
           selectedAppBadgeSwitch(null, false);
-
           formBtnSwitch(isUpdate);
 
+          // Clear Input
           appNameInput.value = "";
 
-          if (isSyncAll) {
-            syncAllBtn.click((e) => {
-              e.stopPropagation();
-              e.preventDefault();
-            });
+          /**
+           * ADDED: Manual clear of error message
+           * REASON: FormValidator doesn't auto-clear when value is changed via JS.
+           */
+          const errEl =
+            appNameInput.parentElement.querySelector(".error-message");
+          if (errEl) errEl.innerText = "";
+
+          /**
+           * CHANGED: Using getSyncAllStatus() check
+           * REASON: Properly checks the global state after name update.
+           */
+          if (getSyncAllStatus()) {
+            syncAllBtn.click();
           } else {
             appList.forEach((app) => {
               if (app.isSynced) {
@@ -226,9 +288,7 @@ export function startApp() {
           }
           e.preventDefault();
         } else {
-          textAlert(
-            `Oops looks like the ${appNameInput.value} already exists!!!`
-          );
+          alert(`Oops looks like the ${appNameInput.value} already exists!!!`);
         }
       }
     } else {
@@ -241,7 +301,6 @@ export function startApp() {
 
   function registerApp(appName) {
     console.log(`Registering App => ${appName}`);
-
     const appExists = appList.some((app) => app.name === appName);
 
     if (!isAppNameValid(appName)) return true;
@@ -252,39 +311,35 @@ export function startApp() {
         id: uuidv4(),
         isSynced: false,
       };
+
       appRegisterService(app);
-      createListItem(app);
+
+      // --- CAPTURE THE ELEMENT ---
+      const newListItem = createListItem(app);
+
+      // // --- TRIGGER SYNC IF GLOBAL STATUS IS ACTIVE ---
+      // if (getSyncAllStatus()) {
+      //   console.log("Global SyncAll is active. Syncing new app...");
+      //   fetchAppInfo(newListItem, app);
+      // }
+
       appNameInput.value = "";
-      isSyncAll = false;
-      // appNameInput.dispatchEvent(new Event('change', { 'bubbles': true }));
+      const errEl = appNameInput.parentElement.querySelector(".error-message");
+      if (errEl) errEl.innerText = "";
     } else {
-      textAlert(`Oops looks like the ${appName} already exists!!!`);
+      // PRESERVED: Your original alert logic
+      alert(`Oops looks like the ${appName} already exists!!!`);
     }
   }
 
   function isAppNameValid(appName) {
     var regexp = /^(?!.*\d-\d)[A-Za-z0-9]+(-[A-Za-z0-9]+)?$/;
-
     const isValid = appName.search(regexp) !== -1;
-
     if (!isValid) {
-      textAlert("not valid name");
+      alert("not valid name");
       return false;
     }
-
     return true;
   }
-
-  function logger(log) {
-    console.log(`${log}`);
-  }
-  function textAlert(message) {
-    alert(`${message}`);
-  }
 }
-
-
-
-
-
 

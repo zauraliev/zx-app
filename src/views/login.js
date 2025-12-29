@@ -1,6 +1,6 @@
 import { authenticate } from "../service.js";
-import { router } from "../router.js";
-// Export the string for app.js to use
+import { navigateTo } from "../router.js"; // CHANGED: Import navigateTo instead of router
+
 export function renderLogin() {
   return `
     <h2 style="text-align: center">Login</h2>
@@ -32,9 +32,14 @@ export function initLogin() {
     const isAuthorized = await authenticate(username, password);
 
     if (isAuthorized) {
-      localStorage.setItem("isLoggedIn", "true"); 
-      history.pushState({}, "", "/");
-      router(); // Redirect or show protected UI
+      localStorage.setItem("isLoggedIn", "true");
+
+      /**
+       * CHANGED: Using navigateTo("/") instead of manual pushState/router
+       * REASON: This triggers the router.js helper which includes the loop
+       * protection and automatically refreshes the Navbar state.
+       */
+      navigateTo("/dashboard");
     } else {
       if (errEl) errEl.innerText = "Access Denied: Invalid Credentials";
     }
