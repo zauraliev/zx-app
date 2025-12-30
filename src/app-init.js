@@ -205,8 +205,6 @@ export function startApp() {
      * preventing "stale reference" bugs.
      */
     const nameInput = document.getElementById("app-name");
-    const badge = document.getElementById("selected-app");
-    const btn = document.getElementById("form-btn");
 
     if (nameInput) {
       nameInput.value = app.name;
