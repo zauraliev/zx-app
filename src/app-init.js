@@ -10,6 +10,11 @@ import {
   // ADDED: Imports to allow state to survive navigation to/from Settings
   getSyncAllStatus,
   setSyncAllStatus,
+  getItemsPerPage,
+  setItemsPerPage,
+  getCurrentPage,
+  setCurrentPage,
+  getTotalPages,
 } from "./service.js";
 
 import { uuidv4, constructElement } from "./util/util-functions.js";
@@ -37,17 +42,118 @@ export function startApp() {
   const fields = ["app-name"];
   new FormValidator(form, fields).initialize();
 
-  // 1. PRESERVED INITIALIZERS
+  function initialize() {
+    // PRESERVED & MOVED: Clear list before drawing (required for pagination)
+    if (apps) apps.innerHTML = "";
+
+    // CHANGED: Use the sliced list from the service
+    const visibleApps = getAppList();
+    visibleApps.forEach(createListItem);
+
+    // ADDED: Refresh the UI controls
+    renderPagination();
+
+    // PRESERVED: SyncAll re-hydration logic
+    if (getSyncAllStatus()) {
+      runSyncAllLogic(false);
+    }
+  }
+
+  /**
+   * ADDED: renderPagination
+   * REASON: Dynamically builds buttons for each page.
+   * Clicking a button updates the service state and calls initialize().
+   */
+  function renderPagination() {
+    const container = document.getElementById("pagination-controls");
+    if (!container) return;
+    container.innerHTML = "";
+
+    const totalPages = getTotalPages();
+    const currentPage = getCurrentPage();
+
+    // 1. FIRST PAGE (<<)
+    if (currentPage > 1) {
+      const firstBtn = document.createElement("button");
+      firstBtn.innerHTML = "&laquo;";
+      firstBtn.className = "btn-page";
+      firstBtn.onclick = () => {
+        setCurrentPage(1);
+        initialize();
+      };
+      container.appendChild(firstBtn);
+    }
+
+    // 2. PREVIOUS PAGE (<)
+    if (currentPage > 1) {
+      const prevBtn = document.createElement("button");
+      prevBtn.innerHTML = "&lsaquo;"; // Symbol for <
+      prevBtn.className = "btn-page";
+      prevBtn.onclick = () => {
+        setCurrentPage(currentPage - 1);
+        initialize();
+      };
+      container.appendChild(prevBtn);
+    }
+
+    // 3. PAGE NUMBERS (1, 2, 3...)
+    for (let i = 1; i <= totalPages; i++) {
+      const btn = document.createElement("button");
+      btn.innerText = i;
+      btn.className = i === currentPage ? "btn-page active" : "btn-page";
+      btn.onclick = () => {
+        setCurrentPage(i);
+        initialize();
+      };
+      container.appendChild(btn);
+    }
+
+    // 4. NEXT PAGE (>)
+    if (currentPage < totalPages) {
+      const nextBtn = document.createElement("button");
+      nextBtn.innerHTML = "&rsaquo;"; // Symbol for >
+      nextBtn.className = "btn-page";
+      nextBtn.onclick = () => {
+        setCurrentPage(currentPage + 1);
+        initialize();
+      };
+      container.appendChild(nextBtn);
+    }
+
+    // 5. LAST PAGE (>>)
+    if (currentPage < totalPages) {
+      const lastBtn = document.createElement("button");
+      lastBtn.innerHTML = "&raquo;";
+      lastBtn.className = "btn-page";
+      lastBtn.onclick = () => {
+        setCurrentPage(totalPages);
+        initialize();
+      };
+      container.appendChild(lastBtn);
+    }
+  }
+
+  /**
+   * ADDED: initPageSizeSelector
+   * REASON: Connects the 10, 50, 100 dropdown to the service state.
+   */
+  function initPageSizeSelector() {
+    const selector = document.getElementById("page-size");
+    if (selector) {
+      selector.value = getItemsPerPage();
+      selector.onchange = (e) => {
+        setItemsPerPage(e.target.value);
+        initialize();
+      };
+    }
+  }
+
+  // PRESERVED: Original initializers
   console.log("Apps => ", getAppList());
   getSelectedApp();
 
-  // PRESERVED: DOM cleanup logic
-  if (apps) apps.innerHTML = "";
-
-  function initialize() {
-    appList.forEach(createListItem);
-  }
-
+  // Call the new setup and the first draw
+  initPageSizeSelector();
   initialize();
 
   // 2. THE LOGIC ENGINE (Preserving count and isProcessing)
@@ -56,15 +162,21 @@ export function startApp() {
     let isProcessing = false;
 
     appList.forEach((app) => {
-      // THE FIX: Manual click syncs all. Re-hydration (false) skips unsynced apps.
       if (isManualClick || app.isSynced) {
         let parentTagId = `li-${app.id}`;
         let parentTag = document.getElementById(parentTagId);
-        fetchAppInfo(parentTag, app).then((app) => {
-          isProcessing = false;
-          count++;
-          console.log(app, "Count => ", count);
-        });
+
+        // Only proceed if the tag actually exists in the current view
+        if (parentTag) {
+          fetchAppInfo(parentTag, app).then((app) => {
+            if (app) {
+              // Only log if the sync actually finished
+              isProcessing = false;
+              count++;
+              console.log(app, "Count => ", count);
+            }
+          });
+        }
       }
     });
   }
@@ -141,13 +253,14 @@ export function startApp() {
   }
 
   function fetchAppInfo(parentTag, app) {
-    // ADD THIS GUARD: Prevents the "Cannot read properties of undefined" crash
-    if (!parentTag) {
-      console.error(
-        "fetchAppInfo failed: parentTag is undefined for app",
-        app.id
-      );
-      return Promise.reject("Invalid parentTag");
+    /**
+     * UPDATED GUARD: Silent Exit
+     * REASON: When changing page sizes (10, 50, 100), it is NORMAL for elements
+     * to leave the DOM. We remove the console.warn to keep your logs clean.
+     */
+    if (!parentTag || !document.contains(parentTag)) {
+      // We return 'resolve' silently so the logic continues without spamming the console
+      return Promise.resolve();
     }
 
     let span = document.createElement("span");
@@ -157,12 +270,17 @@ export function startApp() {
     const spanEl = document.getElementById(span.id);
     if (spanEl) spanEl.innerHTML = " Loading... ";
 
-    return new Promise(async function (resolve) {
+    return new Promise((resolve) => {
       setTimeout(() => {
         const updateEl = document.getElementById(span.id);
-        if (updateEl) updateEl.innerHTML = ` >>> ${app.id}`;
-        app.isSynced = true;
-        resolve(app);
+        // RE-CHECK: Ensure the user hasn't switched pages during the 300ms delay
+        if (updateEl && document.contains(updateEl)) {
+          updateEl.innerHTML = ` >>> ${app.id}`;
+          app.isSynced = true;
+          resolve(app);
+        } else {
+          resolve(); // Resolve without data if element vanished during timeout
+        }
       }, 300);
     });
   }
@@ -339,6 +457,20 @@ export function startApp() {
     }
     return true;
   }
+
+  function initPageSizeSelector() {
+    const selector = document.getElementById("page-size");
+    if (!selector) return;
+
+    // Set initial value from service state
+    selector.value = getItemsPerPage();
+
+    selector.onchange = (e) => {
+      setItemsPerPage(e.target.value);
+      initialize(); // Re-renders the list and pagination buttons
+    };
+  }
+
+  // Ensure this is called when the Dashboard view starts
+  initPageSizeSelector();
 }
-
-

@@ -264,3 +264,28 @@ h2 {
     }
   }
 }
+
+.pagination-bar {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-page {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.btn-page.active {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.btn-page:hover:not(.active) {
+  background: #f0f0f0;
+}
