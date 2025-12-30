@@ -8,6 +8,27 @@ let appList = [...data];
 let selectedApp = null;
 let isSyncAllGlobal = false;
 
+let currentPage = 1;
+let itemsPerPage = 10; // Default set to 10
+
+export const getCurrentPage = () => currentPage;
+export const setCurrentPage = (page) => {
+  currentPage = page;
+};
+
+export const getItemsPerPage = () => itemsPerPage;
+/**
+ * UPDATED: setItemsPerPage
+ * REASON: When changing list size, we must reset to Page 1
+ * to avoid "out of bounds" errors on smaller datasets.
+ */
+export const setItemsPerPage = (size) => {
+  itemsPerPage = parseInt(size);
+  currentPage = 1;
+};
+
+export const getTotalPages = () => Math.ceil(appList.length / itemsPerPage);
+
 export const getSyncAllStatus = () => isSyncAllGlobal;
 export const setSyncAllStatus = (status) => {
   isSyncAllGlobal = status;
@@ -31,7 +52,10 @@ function updateAppName(appId, newName) {
  * making new registrations disappear. Now it just returns the current state.
  */
 function getAppList() {
-  return appList;
+  const start = (currentPage - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  // Preservation: Using slice to return only the current view's data
+  return appList.slice(start, end);
 }
 
 function getSelectedApp() {
@@ -41,8 +65,6 @@ function getSelectedApp() {
 function setSelectedApp(app) {
   selectedApp = app;
 }
-
-// ... your existing authenticate, saveSession, checkSession, etc. ...
 
 async function authenticate(username, password) {
   try {

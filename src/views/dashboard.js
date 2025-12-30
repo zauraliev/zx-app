@@ -1,5 +1,6 @@
 import { startApp } from "../app-init.js";
 
+// views/dashboard.js
 export function renderDashboard() {
   return `
       <h2 style="text-align: center">App Registration (2022-2025)</h2>
@@ -29,13 +30,32 @@ export function renderDashboard() {
           </div>
         </div>
       </form>
+
+      <!-- ADDED: Controls bar for Sync and Page Size -->
+      <div class="dashboard-actions" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <input id="sync-all" type="button" class="btn" value="Sync All" />
+        
+        <div class="page-size-container">
+          <label for="page-size">Show:</label>
+          <select id="page-size" class="type-2 select-input">
+            <option value="10">10</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+      </div>
+
       <div class="apps">
         <ul id="app-list" class="app-list"></ul>
       </div>
-      <br />
-      <input id="sync-all" type="button" class="btn" value="Sync All" />
+
+      <!-- ADDED: Semantic Pagination Navigation -->
+      <nav id="pagination-nav" aria-label="App list pagination" style="text-align: center; margin-top: 20px;">
+        <div id="pagination-controls" class="pagination-bar"></div>
+      </nav>
   `;
 }
+
 
 export function initDashboard() {
   startApp(); // Re-binds your app logic to the new HTML
