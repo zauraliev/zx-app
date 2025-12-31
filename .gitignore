@@ -5,3 +5,4 @@ coverage/
 .vercel
 .env.keys
 .env*.local
+*generate-keys*

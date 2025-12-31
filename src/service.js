@@ -2,100 +2,110 @@
 import data from "./statics/data.js";
 ("use strict");
 
-// 1. Initialize appList ONCE from your static data
-// We use a flat array that we only push to or modify, never overwrite.
+// 1. MODULE STATE
 let appList = [...data];
-let selectedApp = null;
 let isSyncAllGlobal = false;
-
+let selectedApp = null;
 let currentPage = 1;
-let itemsPerPage = 10; // Default set to 10
+let itemsPerPage = 10;
 
-export const getCurrentPage = () => currentPage;
-export const setCurrentPage = (page) => {
-  currentPage = page;
+// 2. DATA AND NAVIGATION LOGIC
+const getAppList = () => {
+  const start = (currentPage - 1) * itemsPerPage;
+  return appList.slice(start, start + itemsPerPage);
 };
 
-export const getItemsPerPage = () => itemsPerPage;
-/**
- * UPDATED: setItemsPerPage
- * REASON: When changing list size, we must reset to Page 1
- * to avoid "out of bounds" errors on smaller datasets.
- */
-export const setItemsPerPage = (size) => {
-  itemsPerPage = parseInt(size);
-  currentPage = 1;
+const appRegisterService = (newApp) => {
+  appList.push(newApp);
 };
 
-export const getTotalPages = () => Math.ceil(appList.length / itemsPerPage);
+const updateAppName = (appId, newName) => {
+  const app = appList.find((a) => a.id === appId);
+  if (app) {
+    // METICULOUS: Object.assign ensures the change 'sticks' to the
+    // original reference that other views (like Get Info) are looking at.
+    Object.assign(app, { name: newName });
+  }
+};
 
-export const getSyncAllStatus = () => isSyncAllGlobal;
-export const setSyncAllStatus = (status) => {
+const getSyncAllStatus = () => isSyncAllGlobal;
+const setSyncAllStatus = (status) => {
   isSyncAllGlobal = status;
 };
 
-function appRegisterService(newApp) {
-  // Pushing to the existing array maintains the reference
-  appList.push(newApp);
-}
+const getCurrentPage = () => currentPage;
+const setCurrentPage = (page) => {
+  currentPage = page;
+};
+const getItemsPerPage = () => itemsPerPage;
+const setItemsPerPage = (size) => {
+  itemsPerPage = parseInt(size);
+  currentPage = 1;
+};
+const getTotalPages = () => Math.ceil(appList.length / itemsPerPage);
 
-function updateAppName(appId, newName) {
-  const app = appList.find((app) => app.id === appId);
-  if (app) {
-    app.name = newName;
-  }
-}
-
-/**
- * CHANGED: Removed the 'appList = [...data]' line.
- * REASON: That line was resetting your list every time you navigated back,
- * making new registrations disappear. Now it just returns the current state.
- */
-function getAppList() {
-  const start = (currentPage - 1) * itemsPerPage;
-  const end = start + itemsPerPage;
-  // Preservation: Using slice to return only the current view's data
-  return appList.slice(start, end);
-}
-
-function getSelectedApp() {
-  return selectedApp;
-}
-
-function setSelectedApp(app) {
+const getSelectedApp = () => selectedApp;
+const setSelectedApp = (app) => {
   selectedApp = app;
+};
+
+// 3. SESSION HELPERS
+const saveSession = () => localStorage.setItem("isLoggedIn", "true");
+const checkSession = () => localStorage.getItem("isLoggedIn") === "true";
+const clearSession = () => {
+  localStorage.removeItem("isLoggedIn");
+  localStorage.removeItem("app_token");
+};
+
+// 4. 2025 AUTHENTICATION (SHA-256)
+async function hashPassword(password) {
+  const msgUint8 = new TextEncoder().encode(password);
+  const hashBuffer = await window.crypto.subtle.digest("SHA-256", msgUint8);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 async function authenticate(username, password) {
   try {
+    const passwordHash = await hashPassword(password);
     const res = await fetch("/api/login", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ username, password: passwordHash }),
     });
-    if (!res.ok) return false;
-    const data = await res.json();
-    return data.success;
+    const result = await res.json();
+    if (result.success && result.token) {
+      localStorage.setItem("app_token", result.token);
+      saveSession();
+    }
+    return result.success;
   } catch (err) {
-    console.error("Login error:", err);
     return false;
   }
 }
 
-const saveSession = () => localStorage.setItem("isLoggedIn", "true");
-const clearSession = () => localStorage.clear();
-const checkSession = () => localStorage.getItem("isLoggedIn") === "true";
-
+// 5. UNIFIED EXPORTS (Restoring all missing references)
 export {
   appList,
-  selectedApp,
-  appRegisterService,
-  getAppList,
+  selectedApp, // Fixed missing export
+  isSyncAllGlobal,
+  getSyncAllStatus,
+  setSyncAllStatus,
   getSelectedApp,
   setSelectedApp,
-  updateAppName,
-  authenticate,
+  getAppList,
+  getCurrentPage,
+  setCurrentPage,
+  getItemsPerPage,
+  setItemsPerPage,
+  getTotalPages,
+  appRegisterService, // Fixed missing export
+  updateAppName, // Fixed missing export
   saveSession,
-  clearSession,
   checkSession,
+  clearSession,
+  authenticate,
 };

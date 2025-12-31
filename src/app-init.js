@@ -30,6 +30,27 @@ export function startApp() {
   const selectedAppBadge = document.getElementById("selected-app");
   const formBtn = document.getElementById("form-btn");
 
+  // 1. Identify your login form
+  const loginForm = document.getElementById("login-form");
+
+  if (loginForm) {
+    loginForm.addEventListener("submit", async (event) => {
+      event.preventDefault(); // STOP the browser from sending plain text
+
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+
+      // 2. WAIT for the encryption and the API response
+      const success = await authenticate(user, pass);
+
+      if (success) {
+        navigateTo("/dashboard");
+      } else {
+        alert("Login Failed: Invalid credentials or encryption error.");
+      }
+    });
+  }
+
   let isUpdate = false;
 
   /**
