@@ -1,4 +1,4 @@
-// app-init.js
+// app-init.js - Updated with UI Helpers
 import {
   appRegisterService,
   getAppList,
@@ -7,7 +7,6 @@ import {
   getSelectedApp,
   setSelectedApp,
   updateAppName,
-  // ADDED: Imports to allow state to survive navigation to/from Settings
   getSyncAllStatus,
   setSyncAllStatus,
   getItemsPerPage,
@@ -15,13 +14,21 @@ import {
   getCurrentPage,
   setCurrentPage,
   getTotalPages,
+  getSyncData,
+  setIndividualSync,
 } from "./service.js";
 
 import { uuidv4, constructElement } from "./util/util-functions.js";
 import FormValidator from "./util/form-validator.js";
+import {
+  toast,
+  HighlightManager,
+  ConfirmDialog,
+  LoadingManager,
+} from "./util/ui-helpers.js";
 
 export function startApp() {
-  console.log("MY_VAR: ", process.env.MY_VAR || "NO VALUE");
+  console.log("🔄 App initializing with UI helpers");
 
   const container = document.querySelector(".container");
   const apps = document.getElementById("app-list");
@@ -30,40 +37,49 @@ export function startApp() {
   const selectedAppBadge = document.getElementById("selected-app");
   const formBtn = document.getElementById("form-btn");
 
-  let isUpdate = false;
+  // 1. Login form handler
+  const loginForm = document.getElementById("login-form");
+  if (loginForm) {
+    loginForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
 
-  /**
-   * REMOVED: let isSyncAll = false;
-   * REASON: This local variable is destroyed when you navigate to Settings.
-   * REPLACEMENT: We now use getSyncAllStatus() and setSyncAllStatus() from service.js.
-   */
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+
+      // Show loading on login button
+      LoadingManager.toggleButtonLoading("login-btn", true);
+
+      const success = await authenticate(user, pass);
+
+      LoadingManager.toggleButtonLoading("login-btn", false);
+
+      if (success) {
+        toast.success("Login successful! Redirecting...", 2000);
+        setTimeout(() => navigateTo("/dashboard"), 500);
+      } else {
+        toast.error("Login failed: Invalid credentials", 4000);
+      }
+    });
+  }
+
+  let isUpdate = false;
 
   const form = document.querySelector(".form");
   const fields = ["app-name"];
   new FormValidator(form, fields).initialize();
 
   function initialize() {
-    // PRESERVED & MOVED: Clear list before drawing (required for pagination)
     if (apps) apps.innerHTML = "";
 
-    // CHANGED: Use the sliced list from the service
     const visibleApps = getAppList();
+    console.log(
+      `📄 Rendering page ${getCurrentPage()}: ${visibleApps.length} apps`
+    );
+
     visibleApps.forEach(createListItem);
-
-    // ADDED: Refresh the UI controls
     renderPagination();
-
-    // PRESERVED: SyncAll re-hydration logic
-    if (getSyncAllStatus()) {
-      runSyncAllLogic(false);
-    }
   }
 
-  /**
-   * ADDED: renderPagination
-   * REASON: Dynamically builds buttons for each page.
-   * Clicking a button updates the service state and calls initialize().
-   */
   function renderPagination() {
     const container = document.getElementById("pagination-controls");
     if (!container) return;
@@ -87,7 +103,7 @@ export function startApp() {
     // 2. PREVIOUS PAGE (<)
     if (currentPage > 1) {
       const prevBtn = document.createElement("button");
-      prevBtn.innerHTML = "&lsaquo;"; // Symbol for <
+      prevBtn.innerHTML = "&lsaquo;";
       prevBtn.className = "btn-page";
       prevBtn.onclick = () => {
         setCurrentPage(currentPage - 1);
@@ -111,7 +127,7 @@ export function startApp() {
     // 4. NEXT PAGE (>)
     if (currentPage < totalPages) {
       const nextBtn = document.createElement("button");
-      nextBtn.innerHTML = "&rsaquo;"; // Symbol for >
+      nextBtn.innerHTML = "&rsaquo;";
       nextBtn.className = "btn-page";
       nextBtn.onclick = () => {
         setCurrentPage(currentPage + 1);
@@ -133,108 +149,156 @@ export function startApp() {
     }
   }
 
-  /**
-   * ADDED: initPageSizeSelector
-   * REASON: Connects the 10, 50, 100 dropdown to the service state.
-   */
   function initPageSizeSelector() {
     const selector = document.getElementById("page-size");
     if (selector) {
       selector.value = getItemsPerPage();
       selector.onchange = (e) => {
         setItemsPerPage(e.target.value);
+        toast.info(`Showing ${e.target.value} items per page`, 2000);
         initialize();
       };
     }
   }
 
-  // PRESERVED: Original initializers
+  // Initialization
   console.log("Apps => ", getAppList());
   getSelectedApp();
 
-  // Call the new setup and the first draw
   initPageSizeSelector();
   initialize();
 
-  // 2. THE LOGIC ENGINE (Preserving count and isProcessing)
+  // Sync All Logic
   function runSyncAllLogic(isManualClick = false) {
-    let count = 0;
-    let isProcessing = false;
+    const visibleApps = getAppList();
+    console.log(
+      `🔄 Syncing ${visibleApps.length} apps on page ${getCurrentPage()}`
+    );
 
-    appList.forEach((app) => {
-      if (isManualClick || app.isSynced) {
-        let parentTagId = `li-${app.id}`;
-        let parentTag = document.getElementById(parentTagId);
+    let completed = 0;
+    const total = visibleApps.length;
 
-        // Only proceed if the tag actually exists in the current view
-        if (parentTag) {
-          fetchAppInfo(parentTag, app).then((app) => {
-            if (app) {
-              // Only log if the sync actually finished
-              isProcessing = false;
-              count++;
-              console.log(app, "Count => ", count);
-            }
-          });
-        }
+    visibleApps.forEach((app) => {
+      let parentTagId = "li-" + app.id;
+      let parentTag = document.getElementById(parentTagId);
+
+      if (parentTag) {
+        fetchAppInfo(parentTag, app).then(() => {
+          completed++;
+          if (completed === total) {
+            toast.success(`Synced ${completed} apps successfully`, 3000);
+          }
+        });
       }
     });
+
+    if (visibleApps.length === 0) {
+      toast.info("No apps to sync on this page", 2000);
+    }
   }
 
-  // 3. THE BUTTON CLICK: Sets global state and runs logic
-  syncAllBtn.onclick = function (e) {
-    setSyncAllStatus(true); // Persist state globally
+  // Sync All Button
+  syncAllBtn.onclick = async function (e) {
     e.stopPropagation();
-    runSyncAllLogic(true); // 'true' means manual sync all
+
+    const currentPage = getCurrentPage();
+    const pageSize = getItemsPerPage();
+    const visibleApps = getAppList();
+
+    if (visibleApps.length === 0) {
+      toast.warning("No apps to sync on this page", 2000);
+      return;
+    }
+
+    const confirmed = await ConfirmDialog.show(
+      `Sync all ${visibleApps.length} apps on page ${currentPage}?`,
+      {
+        title: "Confirm Sync All",
+        okText: "Sync All",
+        cancelText: "Cancel",
+      }
+    );
+
+    if (!confirmed) return;
+
+    // Show loading on sync button
+    LoadingManager.toggleButtonLoading("sync-all", true);
+
+    // Mark all apps as synced
+    visibleApps.forEach((app) => {
+      app.isSynced = true;
+      setIndividualSync(app.id, true, ` >>> ${app.id}`);
+    });
+
+    // Run sync logic
+    runSyncAllLogic(true);
+
+    // Re-enable button after 1 second
+    setTimeout(() => {
+      LoadingManager.toggleButtonLoading("sync-all", false);
+    }, 1000);
   };
 
-  // 4. RE-HYDRATION: Check global state when returning from Settings
-  if (getSyncAllStatus()) {
-    console.log("Global SyncAll active: Restoring state...");
-    // Using runSyncAllLogic directly as you noted syncAllBtn.click() can fail timing
-    runSyncAllLogic(false); // 'false' ensures we skip newly registered apps
-  }
-
-  // 5. REGISTER APP (Preserving your captured reference)
+  // Create List Item
   function createListItem(app) {
     let item = document.createElement("li");
     item.id = `li-${app.id}`;
 
+    // App name link
     let linkProps = {
       id: `link-${app.id}`,
       href: "#",
       className: "app-name-link",
       onclick: (e) => {
-        /**
-         * ADDED: e.preventDefault();
-         * REASON: Stops the browser from jumping to top/adding "#" to URL on click.
-         */
         e.preventDefault();
         editAppName(app);
       },
     };
     const link = constructElement(linkProps, "a");
     link.appendChild(document.createTextNode(`${app.name}`));
-
     item.appendChild(link);
+
+    // Separator
     item.appendChild(document.createTextNode(` >>> `));
 
+    // Check cache for sync state
+    const cachedData = getSyncData(app.id);
+    const isSyncedFromCache = cachedData?.isSynced || false;
+    const isActuallySynced = isSyncedFromCache || app.isSynced;
+
+    // Update memory state from cache if needed
+    if (cachedData?.isSynced && !app.isSynced) {
+      app.isSynced = true;
+    }
+
+    // Button with dynamic text
     let btnProps = {
       id: `button-${app.id}`,
       type: "button",
-      value: "Get Info",
+      value: isActuallySynced ? "Refresh Info" : "Get Info",
       className: "btn",
     };
-
     const btn = constructElement(btnProps, "input");
     item.appendChild(btn);
+
+    // Show UUID if synced
+    if (isActuallySynced) {
+      let span = document.createElement("span");
+      span.id = `span-${app.id}`;
+
+      // ✅ RESTORED: Show cached data with timestamp
+      span.innerHTML = cachedData?.data || ` >>> ${app.id}`;
+      span.style.color = "#3c9c3c";
+      span.style.fontSize = "0.9em";
+      span.style.fontStyle = "italic";
+
+      item.appendChild(span);
+    }
 
     getInfoBtn(item, app, btn);
     apps.prepend(item);
 
-    // --- CRUCIAL ADDITION ---
     return item;
-    // REASON: This allows registerApp to use the element immediately without a DOM lookup.
   }
 
   function getInfoBtn(parentTag, app, btn) {
@@ -244,42 +308,75 @@ export function startApp() {
       e.stopPropagation();
       if (isProcessing) return;
       isProcessing = true;
-      fetchAppInfo(parentTag, app).then((app) => {
-        isProcessing = false;
-        count++;
-        console.log(app, "Count => ", count);
-      });
+
+      // Show loading on this button
+      LoadingManager.toggleButtonLoading(btn.id, true);
+
+      fetchAppInfo(parentTag, app)
+        .then((app) => {
+          isProcessing = false;
+          LoadingManager.toggleButtonLoading(btn.id, false);
+          count++;
+          console.log(app, "Count => ", count);
+        })
+        .catch(() => {
+          isProcessing = false;
+          LoadingManager.toggleButtonLoading(btn.id, false);
+          toast.error(`Failed to sync ${app.name}`, 3000);
+        });
     };
   }
 
   function fetchAppInfo(parentTag, app) {
-    /**
-     * UPDATED GUARD: Silent Exit
-     * REASON: When changing page sizes (10, 50, 100), it is NORMAL for elements
-     * to leave the DOM. We remove the console.warn to keep your logs clean.
-     */
     if (!parentTag || !document.contains(parentTag)) {
-      // We return 'resolve' silently so the logic continues without spamming the console
       return Promise.resolve();
     }
 
     let span = document.createElement("span");
-    span.id = `span-00${app.id}`;
+    span.id = `span-${app.id}`;
     parentTag.appendChild(span);
 
     const spanEl = document.getElementById(span.id);
     if (spanEl) spanEl.innerHTML = " Loading... ";
 
+    const btn = document.getElementById(`button-${app.id}`);
+    if (btn) {
+      btn.value = "Loading...";
+    }
+
     return new Promise((resolve) => {
       setTimeout(() => {
         const updateEl = document.getElementById(span.id);
-        // RE-CHECK: Ensure the user hasn't switched pages during the 300ms delay
         if (updateEl && document.contains(updateEl)) {
-          updateEl.innerHTML = ` >>> ${app.id}`;
-          app.isSynced = true;
+          // ✅ RESTORED: Timestamp display
+          const timeString = new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          });
+          const fetchedData = ` >>> ${app.id} (Synced at ${timeString})`;
+
+          updateEl.innerHTML = fetchedData;
+          updateEl.style =
+            "color: #3c9c3c; font-size: 0.9em; font-style: italic;";
+
+          if (btn) {
+            btn.value = "Refresh Info";
+          }
+
+          // ✅ RESTORED: Save with timestamp
+          setIndividualSync(app.id, true, fetchedData);
+
+          // Also update app.isSynced in memory
+          const appInList = appList.find((a) => a.id === app.id);
+          if (appInList) {
+            appInList.isSynced = true;
+          }
+
+          // Show success feedback
+          toast.success(`Synced ${app.name} at ${timeString}`, 2000);
+
           resolve(app);
-        } else {
-          resolve(); // Resolve without data if element vanished during timeout
         }
       }, 300);
     });
@@ -289,26 +386,30 @@ export function startApp() {
     try {
       let count = 0;
       let isProcessing = false;
-      syncAllBtn.onclick = function (e) {
-        setSyncAllStatus(true); // Turn on global sync mode
-
+      syncAllBtn.onclick = async function (e) {
         e.stopPropagation();
         if (isProcessing) return;
         isProcessing = true;
-        appList.forEach((app) => {
+
+        const visibleApps = getAppList();
+
+        // Show loading
+        LoadingManager.toggleButtonLoading("sync-all", true);
+
+        visibleApps.forEach((app) => {
           let parentTagId = `li-${app.id}`;
           let parentTag = document.getElementById(parentTagId);
           fetchAppInfo(parentTag, app).then((app) => {
             isProcessing = false;
+            LoadingManager.toggleButtonLoading("sync-all", false);
             count++;
             console.log(app, "Count => ", count);
           });
         });
       };
     } catch (error) {
-      // CHANGED: Update global state on error
-      // setSyncAllStatus(false);
       console.log(error);
+      toast.error("Sync all failed", 3000);
     }
   }
 
@@ -317,11 +418,6 @@ export function startApp() {
   function editAppName(app) {
     setSelectedApp(app);
 
-    /**
-     * ADDED: Manual re-query of elements
-     * REASON: Ensures the script targets the NEW elements created by the 2025 router,
-     * preventing "stale reference" bugs.
-     */
     const nameInput = document.getElementById("app-name");
 
     if (nameInput) {
@@ -331,6 +427,9 @@ export function startApp() {
       isUpdate = true;
       formBtnSwitch(isUpdate);
       nameInput.focus();
+
+      // Highlight the selected app
+      HighlightManager.flash(`li-${app.id}`, "#3B82F6");
     }
   }
 
@@ -356,20 +455,36 @@ export function startApp() {
     }
   }
 
-  formBtn.onclick = function (e) {
+  formBtn.onclick = async function (e) {
+    e.preventDefault();
+
+    if (!appNameInput.value.trim()) {
+      toast.error("Please enter an app name", 3000);
+      return;
+    }
+
+    const appName = appNameInput.value.trim();
+
     if (isUpdate) {
+      // UPDATE MODE
       if (appNameInput.value) {
         const appExists = appList.some(
           (app) => app.name === appNameInput.value && app.id !== selectedApp.id
         );
 
-        if (!isAppNameValid(appNameInput.value)) return true;
+        if (!isAppNameValid(appNameInput.value)) {
+          toast.error("Invalid app name format", 3000);
+          return;
+        }
 
         if (!appExists) {
+          // Show loading
+          LoadingManager.toggleButtonLoading("form-btn", true);
+
           updateAppName(selectedApp.id, appNameInput.value);
 
+          // Refresh the list
           apps.innerHTML = "";
-          console.log(appList);
           initialize();
 
           isUpdate = false;
@@ -379,98 +494,163 @@ export function startApp() {
           // Clear Input
           appNameInput.value = "";
 
-          /**
-           * ADDED: Manual clear of error message
-           * REASON: FormValidator doesn't auto-clear when value is changed via JS.
-           */
           const errEl =
             appNameInput.parentElement.querySelector(".error-message");
           if (errEl) errEl.innerText = "";
 
-          /**
-           * THE FIX FOR UPDATE:
-           * We do NOT call syncAllBtn.click() here. Instead, we manually
-           * restore the sync state for only those that had it.
-           */
-          if (getSyncAllStatus()) {
-            appList.forEach((app) => {
-              // ONLY restore sync if the app was already synced.
-              // If it was a new registered app with isSynced: false, it stays false.
-              if (app.isSynced) {
-                const parentTag = document.getElementById(`li-${app.id}`);
-                fetchAppInfo(parentTag, app);
-              }
-            });
-          }
-          e.preventDefault();
+          // Show success
+          LoadingManager.toggleButtonLoading("form-btn", false);
+          toast.success(`App updated to "${appName}"`, 3000);
+
+          // Highlight the updated app
+          HighlightManager.flash(`li-${selectedApp.id}`, "#10B981");
         } else {
-          alert(`Oops looks like the ${appNameInput.value} already exists!!!`);
+          toast.error(`App "${appNameInput.value}" already exists!`, 4000);
         }
       }
     } else {
+      // CREATE MODE
       if (appNameInput.value) {
-        registerApp(appNameInput.value);
-        e.preventDefault();
+        // Show loading
+        LoadingManager.toggleButtonLoading("form-btn", true);
+
+        const success = await registerApp(appNameInput.value);
+
+        LoadingManager.toggleButtonLoading("form-btn", false);
+
+        if (!success) {
+          e.preventDefault();
+        }
       }
     }
   };
 
-  function registerApp(appName) {
-    console.log(`Registering App => ${appName}`);
+  async function registerApp(appName) {
+    console.log(`📝 Registering App => ${appName}`);
     const appExists = appList.some((app) => app.name === appName);
 
-    if (!isAppNameValid(appName)) return true;
-
-    if (!appExists) {
-      const app = {
-        name: appName,
-        id: uuidv4(),
-        isSynced: false,
-      };
-
-      appRegisterService(app);
-
-      // --- CAPTURE THE ELEMENT ---
-      const newListItem = createListItem(app);
-
-      // // --- TRIGGER SYNC IF GLOBAL STATUS IS ACTIVE ---
-      // if (getSyncAllStatus()) {
-      //   console.log("Global SyncAll is active. Syncing new app...");
-      //   fetchAppInfo(newListItem, app);
-      // }
-
-      appNameInput.value = "";
-      const errEl = appNameInput.parentElement.querySelector(".error-message");
-      if (errEl) errEl.innerText = "";
-    } else {
-      // PRESERVED: Your original alert logic
-      alert(`Oops looks like the ${appName} already exists!!!`);
+    if (!isAppNameValid(appName)) {
+      toast.error(
+        "App name must follow pattern: 0000-app (letters, numbers, hyphens only)",
+        4000
+      );
+      return false;
     }
+
+    if (appExists) {
+      toast.error(`App "${appName}" already exists!`, 4000);
+      return false;
+    }
+
+    // Check sequential numbering
+    const appNum = parseInt(appName.replace("-app", ""));
+    const existingNumbers = appList.map((a) =>
+      parseInt(a.name.replace("-app", ""))
+    );
+    const maxNum = Math.max(...existingNumbers, 0);
+
+    if (appNum > maxNum + 10) {
+      const nextSuggested = (maxNum + 1).toString().padStart(4, "0");
+
+      const confirmed = await ConfirmDialog.show(
+        `App ${appName} is out of sequence. Next available: ${nextSuggested}-app. Create anyway?`,
+        {
+          title: "Out of Sequence",
+          okText: "Create Anyway",
+          cancelText: "Use Suggested",
+        }
+      );
+
+      if (!confirmed) {
+        // Auto-fill suggested name
+        appNameInput.value = `${nextSuggested}-app`;
+        appNameInput.focus();
+        return false;
+      }
+    }
+
+    const app = {
+      name: appName,
+      id: `app-${appName.replace("-app", "")}`,
+      isSynced: false,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Insert in correct sorted position
+    let insertIndex = appList.findIndex((a) => {
+      const num = parseInt(a.name.replace("-app", ""));
+      return num > appNum;
+    });
+
+    if (insertIndex === -1) insertIndex = appList.length;
+    appList.splice(insertIndex, 0, app);
+
+    // Also update via service for cache initialization
+    setIndividualSync(app.id, false, "");
+
+    // Calculate which page it belongs on
+    const pageSize = getItemsPerPage();
+    const correctPage = Math.ceil((insertIndex + 1) / pageSize);
+    const currentPage = getCurrentPage();
+
+    // Clear form
+    appNameInput.value = "";
+    const errEl = appNameInput.parentElement.querySelector(".error-message");
+    if (errEl) errEl.innerText = "";
+
+    // Professional feedback based on location
+    if (correctPage === currentPage) {
+      // Same page - show immediately with highlight
+      const newItem = createListItem(app);
+      HighlightManager.highlightNew(newItem.id);
+      toast.success(`✅ ${appName} added to current page`, 3000);
+    } else {
+      // Different page - show notification with navigation option
+      const notification = toast.info(
+        `📄 ${appName} added to page ${correctPage}`,
+        5000
+      );
+
+      // Add "Go to page" button to toast
+      if (notification) {
+        const goBtn = document.createElement("button");
+        goBtn.className = "toast-action";
+        goBtn.textContent = "Go to Page";
+        goBtn.onclick = () => {
+          setCurrentPage(correctPage);
+          initialize();
+          HighlightManager.highlightPage(correctPage);
+        };
+
+        const content = notification.querySelector(".toast-content");
+        if (content) {
+          content.appendChild(goBtn);
+        }
+      }
+
+      // Pulse the correct page button
+      HighlightManager.highlightPage(correctPage);
+    }
+
+    // Log event
+    console.log("App created:", {
+      appName,
+      page: correctPage,
+      totalApps: appList.length,
+    });
+
+    return true;
   }
 
   function isAppNameValid(appName) {
     var regexp = /^(?!.*\d-\d)[A-Za-z0-9]+(-[A-Za-z0-9]+)?$/;
     const isValid = appName.search(regexp) !== -1;
-    if (!isValid) {
-      alert("not valid name");
-      return false;
-    }
-    return true;
-  }
-
-  function initPageSizeSelector() {
-    const selector = document.getElementById("page-size");
-    if (!selector) return;
-
-    // Set initial value from service state
-    selector.value = getItemsPerPage();
-
-    selector.onchange = (e) => {
-      setItemsPerPage(e.target.value);
-      initialize(); // Re-renders the list and pagination buttons
-    };
+    return isValid;
   }
 
   // Ensure this is called when the Dashboard view starts
   initPageSizeSelector();
 }
+
+// Export authenticate function if needed elsewhere
+export { authenticate } from "./service.js";

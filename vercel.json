@@ -1,7 +1,12 @@
 {
   "devCommand": null,
+  "buildCommand": "npm run build",
+  "outputDirectory": "public",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
-  ]
+    { "source": "/(.*)", "destination": "/" }
+  ],
+  "env": {
+    "PORT": "3000"
+  }
 }

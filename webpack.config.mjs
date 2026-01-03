@@ -12,22 +12,22 @@ const __dirname = path.dirname(__filename);
 export default {
   mode: process.env.NODE_ENV || "development",
   entry: { index: path.resolve(__dirname, "src", "app.js") },
-  devServer: {
-    static: path.resolve(__dirname, "public"),
-    host: "127.0.0.1",
-    port: 5000,
-    historyApiFallback: true,
-    hot: true,
-    open: true,
-    proxy: [
-      {
-        context: ["/api"],
-        target: "http://127.0.0.1:3000",
-        changeOrigin: true,
-        secure: false,
-      },
-    ],
-  },
+  // devServer: {
+  //   static: path.resolve(__dirname, "public"),
+  //   host: "127.0.0.1",
+  //   port: 5000,
+  //   historyApiFallback: true,
+  //   hot: true,
+  //   open: true,
+  //   proxy: [
+  //     {
+  //       context: ["/api"],
+  //       target: "http://127.0.0.1:3000",
+  //       changeOrigin: true,
+  //       secure: false,
+  //     },
+  //   ],
+  // },
   devtool: process.env.NODE_ENV === "production" ? false : "source-map",
   output: {
     filename: "app.js",
