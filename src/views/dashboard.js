@@ -1,4 +1,5 @@
 import { startApp } from "../app-init.js";
+import { appList, getSyncData } from "../service.js";
 
 // views/dashboard.js
 export function renderDashboard() {
@@ -56,8 +57,11 @@ export function renderDashboard() {
   `;
 }
 
-
 export function initDashboard() {
+  console.log("dashboard.js loaded");
+  console.log("getSyncData available?", typeof getSyncData);
+  console.log("appList length:", appList?.length);
+
   startApp(); // Re-binds your app logic to the new HTML
 
   // REMOVED: e.stopPropagation();
@@ -66,5 +70,6 @@ export function initDashboard() {
   // REMOVED: window.dispatchEvent(new PopStateEvent("popstate"));
   // Reason: Hacky. navigateTo() handles the URL change and the Render in one step.
   // MENU handles this now
+  // Add debug function to window
+  // Add to initDashboard() function in dashboard.js
 }
-

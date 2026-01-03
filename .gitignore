@@ -1,8 +1,16 @@
 node_modules/
-dist/
-public/
 coverage/
 .vercel
 .env.keys
 .env*.local
 *generate-keys*
+
+# Build outputs
+/dist/
+/public/
+*.log
+
+# OS/IDE files
+.DS_Store
+.idea/
+.vscode/

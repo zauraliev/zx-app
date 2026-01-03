@@ -2,7 +2,7 @@ import { renderHome, initHome } from "./views/home.js";
 import { renderLogin, initLogin } from "./views/login.js";
 import { renderDashboard, initDashboard } from "./views/dashboard.js";
 import { renderSettings, initSettings } from "./views/settings.js";
-import { checkSession } from "./service.js";
+import { checkSession, clearSession } from "./service.js";
 
 const routes = {
   "/": { protected: false, render: renderHome, init: initHome },
@@ -131,7 +131,7 @@ function attachLogoutListener() {
   if (logoutBtn) {
     logoutBtn.onclick = (e) => {
       e.stopPropagation(); // Prevent the nav.onclick delegation from firing
-      localStorage.removeItem("isLoggedIn");
+      clearSession();
       navigateTo("/login");
     };
   }

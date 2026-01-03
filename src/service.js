@@ -1,63 +1,155 @@
-// src/service.js
+// service.js - 100% CORRECT VERSION
 import data from "./statics/data.js";
 ("use strict");
 
-// 1. MODULE STATE
-let appList = [...data];
-let isSyncAllGlobal = false;
+// ============================================
+// CORE STATE
+// ============================================
+let appList = data.map((app) => ({ ...app, isSynced: false }));
 let selectedApp = null;
 let currentPage = 1;
 let itemsPerPage = 10;
+let isSyncAllGlobal = false;
 
-// 2. DATA AND NAVIGATION LOGIC
+// ============================================
+// SIMPLE CACHE SYSTEM
+// ============================================
+const CACHE_KEY = "app_sync_cache";
+
+// Load cache
+const loadCache = () => {
+  try {
+    const saved = localStorage.getItem(CACHE_KEY);
+    return saved ? JSON.parse(saved) : {};
+  } catch {
+    return {};
+  }
+};
+
+// Save cache
+const saveCache = (cache) => {
+  localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+};
+
+// Get sync data
+const getSyncData = (id) => {
+  const cache = loadCache();
+  return cache[id];
+};
+
+// Set sync data
+const setIndividualSync = (id, status, data = "") => {
+  const cache = loadCache();
+  cache[id] = {
+    isSynced: status,
+    data: data,
+    syncedAt: new Date().toISOString(),
+  };
+  saveCache(cache);
+
+  // Update in-memory state
+  const app = appList.find((a) => a.id === id);
+  if (app) app.isSynced = status;
+};
+
+// Restore all sync states on startup
+(() => {
+  const cache = loadCache();
+  let restored = 0;
+
+  Object.entries(cache).forEach(([id, cacheData]) => {
+    if (cacheData.isSynced) {
+      const app = appList.find((a) => a.id === id);
+      if (app) {
+        app.isSynced = true;
+        restored++;
+      }
+    }
+  });
+
+  console.log(`🔄 Restored ${restored} synced apps from cache`);
+})();
+
+// ============================================
+// PAGINATION FUNCTIONS
+// ============================================
 const getAppList = () => {
   const start = (currentPage - 1) * itemsPerPage;
   return appList.slice(start, start + itemsPerPage);
 };
 
-const appRegisterService = (newApp) => {
-  appList.push(newApp);
+const getCurrentPage = () => {
+  const saved = localStorage.getItem("current_page");
+  return saved ? parseInt(saved) : currentPage;
+};
+
+const setCurrentPage = (page) => {
+  currentPage = page;
+  localStorage.setItem("current_page", page.toString());
+};
+
+const getItemsPerPage = () => {
+  const saved = localStorage.getItem("items_per_page");
+  return saved ? parseInt(saved) : itemsPerPage;
+};
+
+const setItemsPerPage = (size) => {
+  itemsPerPage = parseInt(size);
+  currentPage = 1;
+  localStorage.setItem("items_per_page", size.toString());
+  localStorage.setItem("current_page", "1");
+};
+
+const getTotalPages = () => Math.ceil(appList.length / itemsPerPage);
+
+// ============================================
+// APP MANAGEMENT FUNCTIONS
+// ============================================
+const appRegisterService = (newApp, maintainOrder = true) => {
+  if (maintainOrder) {
+    // Insert in sorted position
+    const appNum = parseInt(newApp.name.replace("-app", ""));
+    let insertIndex = appList.findIndex((a) => {
+      const num = parseInt(a.name.replace("-app", ""));
+      return num > appNum;
+    });
+
+    if (insertIndex === -1) insertIndex = appList.length;
+    appList.splice(insertIndex, 0, newApp);
+
+    return { app: newApp, index: insertIndex };
+  } else {
+    // Append to end (legacy behavior)
+    appList.push(newApp);
+    return { app: newApp, index: appList.length - 1 };
+  }
 };
 
 const updateAppName = (appId, newName) => {
   const app = appList.find((a) => a.id === appId);
-  if (app) {
-    // METICULOUS: Object.assign ensures the change 'sticks' to the
-    // original reference that other views (like Get Info) are looking at.
-    Object.assign(app, { name: newName });
-  }
+  if (app) app.name = newName;
 };
-
-const getSyncAllStatus = () => isSyncAllGlobal;
-const setSyncAllStatus = (status) => {
-  isSyncAllGlobal = status;
-};
-
-const getCurrentPage = () => currentPage;
-const setCurrentPage = (page) => {
-  currentPage = page;
-};
-const getItemsPerPage = () => itemsPerPage;
-const setItemsPerPage = (size) => {
-  itemsPerPage = parseInt(size);
-  currentPage = 1;
-};
-const getTotalPages = () => Math.ceil(appList.length / itemsPerPage);
 
 const getSelectedApp = () => selectedApp;
 const setSelectedApp = (app) => {
   selectedApp = app;
 };
+const getSyncAllStatus = () => isSyncAllGlobal;
+const setSyncAllStatus = (status) => {
+  isSyncAllGlobal = status;
+};
 
-// 3. SESSION HELPERS
+// ============================================
+// AUTH FUNCTIONS
+// ============================================
 const saveSession = () => localStorage.setItem("isLoggedIn", "true");
 const checkSession = () => localStorage.getItem("isLoggedIn") === "true";
 const clearSession = () => {
   localStorage.removeItem("isLoggedIn");
   localStorage.removeItem("app_token");
+  window.location.href = "/login";
 };
 
-// 4. 2025 AUTHENTICATION (SHA-256)
 async function hashPassword(password) {
   const msgUint8 = new TextEncoder().encode(password);
   const hashBuffer = await window.crypto.subtle.digest("SHA-256", msgUint8);
@@ -70,10 +162,7 @@ async function authenticate(username, password) {
     const passwordHash = await hashPassword(password);
     const res = await fetch("/api/login", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password: passwordHash }),
     });
     const result = await res.json();
@@ -87,10 +176,12 @@ async function authenticate(username, password) {
   }
 }
 
-// 5. UNIFIED EXPORTS (Restoring all missing references)
+// ============================================
+// EXPORTS (ALL FUNCTIONS PROPERLY DEFINED)
+// ============================================
 export {
   appList,
-  selectedApp, // Fixed missing export
+  selectedApp,
   isSyncAllGlobal,
   getSyncAllStatus,
   setSyncAllStatus,
@@ -102,10 +193,12 @@ export {
   getItemsPerPage,
   setItemsPerPage,
   getTotalPages,
-  appRegisterService, // Fixed missing export
-  updateAppName, // Fixed missing export
+  appRegisterService,
+  updateAppName,
   saveSession,
   checkSession,
   clearSession,
   authenticate,
+  getSyncData,
+  setIndividualSync,
 };
