@@ -1,18 +1,32 @@
 import { authenticate } from "../service.js";
-import { navigateTo } from "../router.js"; // CHANGED: Import navigateTo instead of router
+import { navigateTo } from "../router.js";
 
 export function renderLogin() {
   return `
     <h2 style="text-align: center">Login</h2>
     <form id="login-form" class="form">
         <div class="input-group">
-            <input id="user" type="text" class="type-2 input" placeholder="Username" required />
-            <input id="pass" type="password" class="type-2 input" placeholder="Password" required />
+            <input 
+              id="user" 
+              type="text" 
+              class="type-2 input" 
+              placeholder="Username" 
+              autocomplete="username" 
+              required 
+            />
+            <input 
+              id="pass" 
+              type="password" 
+              class="type-2 input" 
+              placeholder="Password" 
+              autocomplete="current-password" 
+              required 
+            />
             <input type="submit" value="Login" class="btn btn-register" />
         </div>
         <p id="err" style="text-align: center; color: red;"></p>
     </form>
-`;
+  `;
 }
 
 export function initLogin() {
@@ -33,12 +47,6 @@ export function initLogin() {
 
     if (isAuthorized) {
       localStorage.setItem("isLoggedIn", "true");
-
-      /**
-       * CHANGED: Using navigateTo("/") instead of manual pushState/router
-       * REASON: This triggers the router.js helper which includes the loop
-       * protection and automatically refreshes the Navbar state.
-       */
       navigateTo("/dashboard");
     } else {
       if (errEl) errEl.innerText = "Access Denied: Invalid Credentials";
