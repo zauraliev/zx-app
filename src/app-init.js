@@ -68,16 +68,73 @@ export function startApp() {
   const fields = ["app-name"];
   new FormValidator(form, fields).initialize();
 
+  // ============================================================
+  // FIXED: DASHBOARD INITIALIZATION
+  // ============================================================
+
   function initialize() {
+    console.group("🚀 INITIALIZE DASHBOARD");
+
+    // 1. Clear container
     if (apps) apps.innerHTML = "";
 
-    const visibleApps = getAppList();
+    // 2. Get CURRENT page state (force validation)
+    const currentPage = getCurrentPage();
+    const itemsPerPage = getItemsPerPage();
+    const totalPages = getTotalPages();
+
+    console.log(`📊 Initialization State:`);
+    console.log(`   Page: ${currentPage}/${totalPages}`);
+    console.log(`   Items per page: ${itemsPerPage}`);
+    console.log(`   Total apps: ${appList.length}`);
+
+    // 3. CRITICAL FIX: Validate page is correct
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const visibleApps = appList.slice(startIndex, startIndex + itemsPerPage);
+
     console.log(
-      `📄 Rendering page ${getCurrentPage()}: ${visibleApps.length} apps`
+      `📄 Loading apps ${startIndex + 1} to ${startIndex + visibleApps.length}`
     );
 
+    // 4. Verification check
+    if (visibleApps.length > 0) {
+      const expectedFirstApp = (currentPage - 1) * itemsPerPage + 1;
+      const actualFirstApp =
+        parseInt(visibleApps[0].name.replace("-app", "")) || 0;
+
+      if (actualFirstApp !== expectedFirstApp) {
+        console.error(`🚨 CRITICAL: Page mismatch!`);
+        console.error(
+          `   Expected app ${expectedFirstApp}, got ${actualFirstApp}`
+        );
+        console.error(`   This indicates a state corruption. Forcing page 1.`);
+
+        // Force reset to page 1
+        setCurrentPage(1);
+        console.warn(`🔄 Resetting to page 1...`);
+
+        // Clear and reinitialize
+        if (apps) apps.innerHTML = "";
+        setTimeout(() => {
+          initialize(); // Recursive call with correct page
+        }, 100);
+        console.groupEnd();
+        return;
+      }
+
+      console.log(
+        `✅ First app correct: ${visibleApps[0].name} (expected app ${expectedFirstApp})`
+      );
+    }
+
+    // 5. Create list items
     visibleApps.forEach(createListItem);
+
+    // 6. Render pagination (will read currentPage from service.js)
     renderPagination();
+
+    console.log(`✅ Dashboard initialized successfully`);
+    console.groupEnd();
   }
 
   function renderPagination() {
@@ -85,8 +142,11 @@ export function startApp() {
     if (!container) return;
     container.innerHTML = "";
 
+    // FIXED: Get fresh page state
+    const currentPage = getCurrentPage(); // ADD THIS LINE
+
+    // Rest of existing code...
     const totalPages = getTotalPages();
-    const currentPage = getCurrentPage();
 
     // 1. FIRST PAGE (<<)
     if (currentPage > 1) {
