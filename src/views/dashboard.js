@@ -58,18 +58,27 @@ export function renderDashboard() {
 }
 
 export function initDashboard() {
-  console.log("dashboard.js loaded");
-  console.log("getSyncData available?", typeof getSyncData);
-  console.log("appList length:", appList?.length);
+  console.log("🎯 Dashboard starting...");
 
-  startApp(); // Re-binds your app logic to the new HTML
+  // FIXED: Verify page state before starting
+  setTimeout(() => {
+    const currentPage = getCurrentPage();
+    const totalPages = getTotalPages();
 
-  // REMOVED: e.stopPropagation();
-  // Reason: Not needed here as there are no parent click listeners to block.
+    console.log(`📌 Dashboard Load Verification:`);
+    console.log(`   Page: ${currentPage}/${totalPages}`);
+    console.log(
+      `   localStorage page: ${localStorage.getItem("current_page")}`
+    );
 
-  // REMOVED: window.dispatchEvent(new PopStateEvent("popstate"));
-  // Reason: Hacky. navigateTo() handles the URL change and the Render in one step.
-  // MENU handles this now
-  // Add debug function to window
-  // Add to initDashboard() function in dashboard.js
+    // Force validation if needed
+    if (currentPage > totalPages) {
+      console.warn(
+        `⚠️ Page ${currentPage} exceeds max ${totalPages}. Correcting...`
+      );
+      setCurrentPage(totalPages);
+    }
+  }, 50);
+
+  startApp();
 }
