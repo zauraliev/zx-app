@@ -25,31 +25,36 @@ cp .env.example .env.local
 
 # Encrypt for Git (if using DotenvX)
 npx @dotenvx/dotenvx encrypt .env.local -o .env.local.encrypted
-
-Development Server
-bash
+```
+### Development Server
+```bash
 # Start development server
 npm run dev
 
 # Server runs on http://localhost:5000
 # Hot reload enabled
-Other Scripts
-bash
+```
+
+### Other Scripts
+```bash
 npm run build        # Production build
 npm run local        # Vercel dev with DotenvX
 npm run vercel       # Vercel development
 npm test            # Run tests
 npm run test:cover  # Test with coverage
-Development Workflow
+```
+
+###*  Development Workflow
+
 1. Make Changes
-Modify source files in /src/
+* Modify source files in /src/
 
-Test in browser at http://localhost:5000
+* Test in browser at http://localhost:5000
 
-Check console for errors
+* Check console for errors
 
 2. Testing
-bash
+```bash
 # Run tests
 npm test
 
@@ -58,65 +63,68 @@ npm test -- service.test.js
 
 # With coverage
 npm run test:cover
+```
+
 3. Commit Changes
 Use conventional commits:
 
-text
+```text
 feat: Add search functionality
 fix: Resolve sync state issue
 docs: Update API documentation
 refactor: Extract UI helpers
 test: Add service.js tests
 chore: Update dependencies
+```
 4. Pull Request
-Create feature branch
+  1. Create feature branch
 
-Add/update tests
+  2. Add/update tests
 
-Update documentation if needed
+  3. Update documentation if needed
 
-Submit PR for review
+  4. Submit PR for review
 
-Key Files & Responsibilities
-src/service.js
-State management (appList, currentPage, itemsPerPage)
+### Key Files & Responsibilities
+#### src/service.js
+* State management (appList, currentPage, itemsPerPage)
 
-Cache system (loadCache, saveCache, getSyncData, setIndividualSync)
+* Cache system (loadCache, saveCache, getSyncData, setIndividualSync)
 
-Authentication helpers
+* Authentication helpers
 
-Pagination calculations
+* Pagination calculations
 
-src/app-init.js
-Dashboard initialization
+#### src/app-init.js
+* Dashboard initialization
 
-App creation logic with smart positioning
+* App creation logic with smart positioning
 
-Sync operations (individual and batch)
+* Sync operations (individual and batch)
 
-Event handlers for UI interactions
+* Event handlers for UI interactions
 
 src/router.js
-Client-side routing
+* Client-side routing
 
-Auth guards for protected routes
+* Auth guards for protected routes
 
-View loading and initialization
+* View loading and initialization
 
 src/util/ui-helpers.js
-Toast notifications
+* Toast notifications
 
-Loading states
+* Loading states
 
-Confirm dialogs
+* Confirm dialogs
 
-Visual highlights
+* Visual highlights
 
-Adding New Features
-New View
-Create src/views/new-view.js:
+### Adding New Features
+#### New View
+1. Create src/views/new-view.js:
 
-javascript
+```javascript
 export function renderNewView() {
   return `<div>New View</div>`;
 }
@@ -124,33 +132,36 @@ export function renderNewView() {
 export function initNewView() {
   // Initialization logic
 }
-Add to router (src/router.js):
+```
+2. Add to router (src/router.js):
 
-javascript
+```javascript
 import { renderNewView, initNewView } from './views/new-view.js';
 
 const routes = {
   '/new-view': { protected: true, render: renderNewView, init: initNewView }
 };
-New Utility
-Create src/util/new-utility.js
+```
 
-Export functions
+### New Utility
+1. Create src/util/new-utility.js
 
-Import where needed
+2. Export functions
 
-Debugging
-Common Issues
-Sync states lost: Check localStorage for app_sync_cache
+3. Import where needed
 
-Pagination wrong: Verify current_page in localStorage
+### Debugging
+#### Common Issues
+1. Sync states lost: Check localStorage for app_sync_cache
 
-UI helpers not working: Check import statements and CSS
+2. Pagination wrong: Verify current_page in localStorage
 
-Debug Tools
+3. UI helpers not working: Check import statements and CSS
+
+### Debug Tools
 In browser console:
 
-javascript
+```javascript
 // Check cache
 JSON.parse(localStorage.getItem('app_sync_cache'))
 
@@ -163,9 +174,11 @@ appList.slice(0, 5).map(a => ({ name: a.name, synced: a.isSynced }))
   itemsPerPage: getItemsPerPage(),
   totalPages: getTotalPages()
 }
-Code Quality
-Linting
-bash
+```
+
+### Code Quality
+#### Linting
+```bash
 # Add ESLint
 npm install --save-dev eslint
 
@@ -174,71 +187,76 @@ module.exports = {
   extends: ['eslint:recommended'],
   env: { browser: true, es2022: true }
 };
-Formatting
-bash
+```
+
+### Formatting
+```bash
 # Add Prettier
 npm install --save-dev prettier
 
 # Format all files
 npx prettier --write src/
-Testing Strategy
-Unit Tests
-service.test.js: State management and cache
+```
 
-util-functions.test.js: Utility functions
+### Testing Strategy
 
-form-validator.test.js: Form validation
+#### Unit Tests
+1. service.test.js: State management and cache
 
-Integration Tests
-Login → Dashboard navigation
+2. util-functions.test.js: Utility functions
 
-App creation → Sync → Refresh
+3. form-validator.test.js: Form validation
 
-Pagination → Sync → Navigation
+#### Integration Tests
+1. Login → Dashboard navigation
 
-Manual Testing
-Chrome, Firefox, Safari, Edge
+2. App creation → Sync → Refresh
 
-Mobile responsiveness
+3. Pagination → Sync → Navigation
 
-Browser refresh scenarios
+#### Manual Testing
+1. Chrome, Firefox, Safari, Edge
 
-Performance Considerations
-Cache usage: localStorage for instant state restoration
+2. Mobile responsiveness
 
-Pagination: Only render visible items
+3. Browser refresh scenarios
 
-DOM updates: Minimal, targeted updates
+#### Performance Considerations
+1. Cache usage: localStorage for instant state restoration
 
-Asset optimization: Webpack handles minification
+2. Pagination: Only render visible items
 
-Security Guidelines
-Input validation: Always validate user input
+3. DOM updates: Minimal, targeted updates
 
-Output encoding: Escape HTML in user content
+4. Asset optimization: Webpack handles minification
 
-Secure storage: Clear cache on logout
+#### Security Guidelines
+1. Input validation: Always validate user input
 
-Environment variables: Use DotenvX for encryption
+2. Output encoding: Escape HTML in user content
 
-Accessibility (A11Y)
-Keyboard navigation: All functionality accessible via keyboard
+3. Secure storage: Clear cache on logout
 
-ARIA labels: Add to interactive elements
+4. Environment variables: Use DotenvX for encryption
 
-Color contrast: WCAG AA compliance
+#### Accessibility (A11Y)
+1. Keyboard navigation: All functionality accessible via keyboard
 
-Focus management: Logical tab order
+2. ARIA labels: Add to interactive elements
 
-Browser Support
-Chrome 60+
+3. Color contrast: WCAG AA compliance
 
-Firefox 55+
+4. Focus management: Logical tab order
 
-Safari 11+
+#### Browser Support
+* Chrome 60+
 
-Edge 79+
+* Firefox 55+
 
-iOS Safari 11+
+* Safari 11+
 
-Android Chrome 60+
+* Edge 79+
+
+* iOS Safari 11+
+
+* Android Chrome 60+

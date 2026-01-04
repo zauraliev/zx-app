@@ -1,15 +1,17 @@
-
 ## **File 4: `/docs/DEPLOYMENT.md`**
 
 # Deployment Guide
 
 ## Prerequisites
+
 - Node.js 24
 - Vercel account (or other hosting)
 - DotenvX setup for encrypted environment variables
 
 ## Environment Variables
+
 Create `.env.local` (DO NOT COMMIT):
+
 ```bash
 # Authentication
 AUTH_USER=admin
@@ -19,7 +21,9 @@ JWT_SECRET=your_jwt_secret
 # App Configuration
 NODE_ENV=production
 ```
+
 ### Encrypt for Git:
+
 ```bash
 npx @dotenvx/dotenvx encrypt .env.local -o .env.local.encrypted
 # Commit .env.local.encrypted
@@ -27,6 +31,7 @@ npx @dotenvx/dotenvx encrypt .env.local -o .env.local.encrypted
 ```
 
 ## Build Commands
+
 ```bash
 # Development
 npm run dev           # Local dev server (port 5000)
@@ -41,26 +46,29 @@ npm run local         # With DotenvX decryption
 ## Vercel Deployment
 
 ### 1. Connect Repository
-Push code to GitHub/GitLab
 
-Import project in Vercel dashboard
+1. Push code to GitHub/GitLab
 
-Configure build settings:
+2. Import project in Vercel dashboard
 
-Build Command: npm run build
+3. Configure build settings:
 
-Output Directory: public
+- Build Command: npm run build
 
-Install Command: npm ci
+- Output Directory: public
+
+- Install Command: npm ci
 
 ### 2. Environment Variables
+
 In Vercel project settings:
 
-Add DOTENV_PRIVATE_KEY_LOCAL_ENCRYPTED from your secrets
+- Add DOTENV_PRIVATE_KEY_LOCAL_ENCRYPTED from your secrets
 
-Add other environment variables if not using DotenvX
+- Add other environment variables if not using DotenvX
 
 ### 3. Deploy
+
 ```bash
 # Manual deploy
 vercel --prod
@@ -71,6 +79,7 @@ vercel --prod
 ### Docker Deployment (Optional)
 
 #### Dockerfile
+
 ```dockerfile
 # Use Node 24-slim for modern engine support and smaller image size
 FROM node:24-slim
@@ -97,8 +106,9 @@ CMD [ "npm", "start" ]
 ```
 
 #### Docker Compose
+
 ```yaml
-version: '3.8'
+version: "3.8"
 services:
   app:
     build: .
@@ -112,6 +122,7 @@ services:
 ```
 
 #### CI/CD (GitHub Actions)
+
 ```yaml
 # .github/workflows/ci.yml
 name: CI/CD
@@ -124,7 +135,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: "24"
       - run: npm ci
       - run: npx @dotenvx/dotenvx run -f .env.local.encrypted -- npm run build
         env:
@@ -135,40 +146,42 @@ jobs:
 
 ### Pre-Deployment
 
-* Remove debug tools from production build
- 
-* Test all user flows
- 
-* Verify environment variables
- 
-* Check console for errors
- 
-* Test on mobile devices
+- Remove debug tools from production build
+
+- Test all user flows
+
+- Verify environment variables
+
+- Check console for errors
+
+- Test on mobile devices
 
 ### Post-Deployment
 
-* Verify HTTPS is working
+- Verify HTTPS is working
 
-* Test login functionality
+- Test login functionality
 
-* Check sync state persistence
+- Check sync state persistence
 
-* Monitor error logs
+- Monitor error logs
 
-* Set up backup strategy
+- Set up backup strategy
 
 ### Monitoring
-* Console errors: Browser developer tools
 
-* Performance: Web Vitals, Lighthouse
+- Console errors: Browser developer tools
 
-* Usage: Basic analytics if needed
+- Performance: Web Vitals, Lighthouse
 
-* Errors: Consider Sentry for production
+- Usage: Basic analytics if needed
+
+- Errors: Consider Sentry for production
 
 ### Rollback Procedure
-* Vercel: Use deployment history in dashboard
 
-* Docker: Deploy previous image tag
+- Vercel: Use deployment history in dashboard
 
-* Manual: Restore from backup
+- Docker: Deploy previous image tag
+
+- Manual: Restore from backup

@@ -59,19 +59,21 @@ json
 
 - 500: Server error
 
-Mock Data Endpoints
-Currently using mock data. Ready for real API integration.
+## Mock Data Endpoints
 
-GET /api/applications
-Get paginated applications (mock implementation).
+#### Currently using mock data. Ready for real API integration.
 
-Query Parameters:
+## GET /api/applications
 
-page: Page number (1-10)
+#### Get paginated applications (mock implementation).
 
-limit: Items per page (10, 50, 100)
+### Query Parameters:
 
-Response:
+- page: Page number (1-10)
+
+- limit: Items per page (10, 50, 100)
+
+### Response:
 
 ```json
 {
@@ -93,11 +95,13 @@ Response:
 }
 ```
 
-POST /api/applications/:id/sync
-Sync individual application (mock implementation).
+### POST /api/applications/:id/sync
+
+#### Sync individual application (mock implementation).
+
+## Response:
 
 ```json
-Response:
 {
   "success": true,
   "data": {
@@ -109,13 +113,15 @@ Response:
 }
 ```
 
-Future API Structure
-Real Database Integration
-When connecting to real database:
+## Future API Structure
 
-App Schema:
+### Real Database Integration
 
-javascript
+#### When connecting to real database:
+
+1. App Schema:
+
+```javascript
 {
 id: "UUID from database",
 name: "0001-app",
@@ -126,9 +132,11 @@ createdAt: "ISO timestamp",
 updatedAt: "ISO timestamp",
 createdBy: "user_id"
 }
-User Schema:
+```
 
-javascript
+2. User Schema:
+
+```javascript
 {
 id: "UUID",
 username: "admin",
@@ -136,59 +144,69 @@ passwordHash: "bcrypt_hash",
 role: "admin|user",
 createdAt: "ISO timestamp"
 }
-WebSocket Events (Future)
-For real-time updates:
+```
 
-javascript
+### WebSocket Events (Future)
+
+#### For real-time updates:
+
+```javascript
 // Connection
-const ws = new WebSocket('/ws');
+const ws = new WebSocket("/ws");
 
 // Events
 ws.onmessage = (event) => {
-const data = JSON.parse(event.data);
-if (data.type === 'app.synced') {
-updateAppInUI(data.appId, data.syncData);
-}
+  const data = JSON.parse(event.data);
+  if (data.type === "app.synced") {
+    updateAppInUI(data.appId, data.syncData);
+  }
 };
-Error Handling
-Standard Error Format
-json
+```
+
+### Error Handling
+
+#### Standard Error Format
+
+```json
 {
-"success": false,
-"error": {
-"code": "ERROR_CODE",
-"message": "Human readable message",
-"details": {}
+  "success": false,
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Human readable message",
+    "details": {}
+  }
 }
-}
-Common Error Codes
-VALIDATION_ERROR: Input validation failed
+```
 
-AUTH_REQUIRED: No authentication token provided
+### Common Error Codes
+* VALIDATION_ERROR: Input validation failed
 
-INVALID_TOKEN: JWT token invalid or expired
+* AUTH_REQUIRED: No authentication token provided
 
-NOT_FOUND: Resource doesn't exist
+* INVALID_TOKEN: JWT token invalid or expired
 
-DUPLICATE_ENTRY: Resource already exists
+* NOT_FOUND: Resource doesn't exist
 
-RATE_LIMITED: Too many requests
+* DUPLICATE_ENTRY: Resource already exists
 
-Rate Limiting
-Production endpoints should implement:
+* RATE_LIMITED: Too many requests
 
-Login attempts: 5 per minute per IP
+### Rate Limiting
+* Production endpoints should implement:
 
-API calls: 100 per minute per user
+* Login attempts: 5 per minute per IP
 
-Sync operations: 10 per minute per user
+* API calls: 100 per minute per user
 
-CORS Configuration
+* Sync operations: 10 per minute per user
+
+### CORS Configuration
 Development: http://localhost:5000
 Production: Your domain only
 
-API Versioning
+### API Versioning
 Use header for future versions:
 
-text
+```text
 Accept: application/vnd.app-registration.v1+json
+```

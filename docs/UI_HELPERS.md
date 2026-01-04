@@ -10,6 +10,8 @@ import {
   HighlightManager,
   LoadingManager,
   ConfirmDialog,
+  FormHelper,
+  ClipboardHelper
 } from "./util/ui-helpers.js";
 ```
 
@@ -114,6 +116,21 @@ FormHelper.clearError("app-name");
 FormHelper.disableForm("registration-form");
 ```
 
+### Clipboard Helper
+## Copy to Clipboard
+```javascript
+// Basic copy
+ClipboardHelper.copy('Text to copy');
+
+// With feedback
+ClipboardHelper.copy(app.id, {
+  successMessage: 'App ID copied!',
+  showToast: true // Default true
+});
+
+// Without toast
+ClipboardHelper.copy(text, { showToast: false });
+```
 ### Integration
 
 ```javascript

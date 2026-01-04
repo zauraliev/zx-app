@@ -12,19 +12,58 @@
 ## Project Structure
 ```text
 app-registration-spa/
-├── src/
-│ ├── api/login.js # Vercel serverless endpoint
-│ ├── css/ # SCSS styles
-│ ├── util/ # Utilities
-│ ├── views/ # SPA pages
-│ ├── statics/data.js # 100 mock apps
-│ ├── app.js # Entry point
-│ ├── router.js # Routing logic
-│ ├── service.js # State & cache
-│ └── app-init.js # Dashboard logic
-├── public/ # Build output
-├── server-combined.js # Express dev server
-└── vercel.json # Vercel config
+├── 📁 .github/workflows/
+│   └── ci.yml                    # GitHub Actions CI/CD
+├── 📁 api/                       # Vercel Serverless Functions
+│   └── login.js                 # Authentication endpoint
+├── 📁 src/
+│   ├── 📁 __tests__/            # Test files
+│   │   └── service.spec.js      # Service layer tests
+│   ├── 📁 views/                # SPA Views
+│   │   ├── home.js
+│   │   ├── login.js
+│   │   ├── dashboard.js
+│   │   └── settings.js
+│   ├── 📁 statics/              # Static/Mock Data
+│   │   └── data.js              # 100 mock apps
+│   ├── 📁 util/                 # Utility Functions
+│   │   ├── util-functions.js    # General helpers
+│   │   ├── form-validator.js    # Form validation
+│   │   └── ui-helpers.js        # UI helper functions
+│   ├── 📁 css/                  # Stylesheets (SCSS)
+│   │   ├── style.scss
+│   │   └── animation.scss
+│   ├── app.js                   # Main entry point
+│   ├── router.js                # Client-side routing
+│   ├── service.js               # State management & auth
+│   └── app-init.js              # Dashboard logic
+├── 📁 public/                   # Build Output
+│   ├── index.html              # HTML shell
+│   ├── app.js                  # Built JavaScript bundle
+│   └── app.map.js              # Source map for debugging
+├── 📁 docs/                     # Organized Documentation
+│   ├── API_REFERENCE.md        # API endpoints & usage
+│   ├── ARCHITECTURE.md         # System architecture & design
+│   ├── DEPLOYMENT.md           # Deployment instructions
+│   ├── DEVELOPMENT.md          # Development setup & workflow
+│   ├── SYNC_SYSTEM.md          # Sync system architecture
+│   └── UI_HELPERS.md           # UI utilities documentation
+├── 📁 __mocks__/               # Jest mocks (optional)
+├── 📄 .babelrc                 # Babel configuration
+├── 📄 .gitignore               # Git ignore rules
+├── 📄 .vercelignore            # Vercel ignore rules
+├── 📄 Dockerfile               # Docker configuration
+├── 📄 README.md                # Main project documentation
+├── 📄 package.json             # Dependencies & scripts
+├── 📄 package-lock.json        # Lock file (auto-generated)
+├── 📄 webpack.config.mjs       # Webpack configuration
+├── 📄 jest.config.cjs          # Jest testing configuration
+├── 📄 jest.setup.js            # Jest setup (optional)
+├── 📄 build.js                 # Simple env test
+├── 📄 server-combined.js       # Express dev server
+├── 📄 vercel.json              # Vercel deployment config
+├── 📄 .env.local.encrypted     # Encrypted environment variables
+└── 📄 .env.production          # Production environment variables
 ```
 ## Core Components
 
