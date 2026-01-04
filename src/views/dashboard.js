@@ -1,5 +1,5 @@
 import { startApp } from "../app-init.js";
-import { appList, getSyncData } from "../service.js";
+import { appList, getSyncData, getCurrentPage, getTotalPages } from "../service.js";
 
 // views/dashboard.js
 export function renderDashboard() {
