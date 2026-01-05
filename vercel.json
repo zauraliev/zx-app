@@ -1,12 +1,13 @@
 {
   "devCommand": null,
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run build -- --mode=production",
   "outputDirectory": "public",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/" }
   ],
   "env": {
-    "PORT": "3000"
+    "PORT": "3000",
+    "NODE_ENV": "production"
   }
 }
