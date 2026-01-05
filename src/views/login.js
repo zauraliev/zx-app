@@ -1,4 +1,4 @@
-import { authenticate } from "../service.js";
+import { authenticate, saveSession, checkSession } from "../service.js";
 import { navigateTo } from "../router.js";
 
 export function renderLogin() {
@@ -33,6 +33,12 @@ export function initLogin() {
   const form = document.getElementById("login-form");
   if (!form) return;
 
+  // Check if already logged in
+  if (checkSession()) {
+    navigateTo("/dashboard");
+    return;
+  }
+
   form.onsubmit = async (e) => {
     e.preventDefault();
     e.stopImmediatePropagation();
@@ -46,7 +52,10 @@ export function initLogin() {
     const isAuthorized = await authenticate(username, password);
 
     if (isAuthorized) {
-      localStorage.setItem("isLoggedIn", "true");
+      // ✅ Now uses service.js function
+      saveSession();
+
+      if (errEl) errEl.innerText = "";
       navigateTo("/dashboard");
     } else {
       if (errEl) errEl.innerText = "Access Denied: Invalid Credentials";
