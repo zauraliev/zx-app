@@ -43,6 +43,31 @@ npm run vercel       # Vercel development
 npm test            # Run tests
 npm run test:cover  # Test with coverage
 ```
+### Production Console Management
+
+In production builds, all console statements are automatically removed via TerserPlugin. To test:
+
+```bash
+# Build production locally
+npm run build -- --mode=production
+
+# Verify no console logs
+grep -c "console\." public/app.js
+```
+
+**Development:** Use console.debug() with icons for visual feedback.
+**Production:** All console methods removed except errors/warnings if needed.
+
+
+## **Add to `/docs/SYNC_SYSTEM.md`:**
+
+### Cache Cleanup
+
+Automatic cache management prevents localStorage bloat:
+- Maximum 100 cached apps retained
+- Oldest syncs removed first
+- Hourly cleanup in production
+- Manual cleanup via `cleanupCache()` function
 
 ###*  Development Workflow
 

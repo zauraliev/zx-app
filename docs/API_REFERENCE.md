@@ -210,3 +210,14 @@ Use header for future versions:
 ```text
 Accept: application/vnd.app-registration.v1+json
 ```
+### Security Updates v1.1.3
+
+**Frontend JWT Validation:**
+- Token expiry checked on each session verification
+- Auto-logout on expired tokens
+- 2-hour session duration enforced
+
+**Production Optimizations:**
+- Console statements removed in production builds
+- CSS properly injected in production
+- Cache size management implemented
