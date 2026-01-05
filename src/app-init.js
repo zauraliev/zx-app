@@ -28,7 +28,7 @@ import {
 } from "./util/ui-helpers.js";
 
 export function startApp() {
-  console.log("🔄 App initializing with UI helpers");
+  console.debug("🔄 App initializing with UI helpers");
 
   const container = document.querySelector(".container");
   const apps = document.getElementById("app-list");
@@ -83,48 +83,26 @@ export function startApp() {
     const itemsPerPage = getItemsPerPage();
     const totalPages = getTotalPages();
 
-    console.log(`📊 Initialization State:`);
-    console.log(`   Page: ${currentPage}/${totalPages}`);
-    console.log(`   Items per page: ${itemsPerPage}`);
-    console.log(`   Total apps: ${appList.length}`);
+    console.debug(`📊 Initialization State:`);
+    console.debug(`   Page: ${currentPage}/${totalPages}`);
+    console.debug(`   Items per page: ${itemsPerPage}`);
+    console.debug(`   Total apps: ${appList.length}`);
 
     // 3. CRITICAL FIX: Validate page is correct
     const startIndex = (currentPage - 1) * itemsPerPage;
     const visibleApps = appList.slice(startIndex, startIndex + itemsPerPage);
 
-    console.log(
+    console.debug(
       `📄 Loading apps ${startIndex + 1} to ${startIndex + visibleApps.length}`
     );
 
-    // 4. Verification check
-    if (visibleApps.length > 0) {
-      const expectedFirstApp = (currentPage - 1) * itemsPerPage + 1;
-      const actualFirstApp =
-        parseInt(visibleApps[0].name.replace("-app", "")) || 0;
-
-      if (actualFirstApp !== expectedFirstApp) {
-        console.error(`🚨 CRITICAL: Page mismatch!`);
-        console.error(
-          `   Expected app ${expectedFirstApp}, got ${actualFirstApp}`
-        );
-        console.error(`   This indicates a state corruption. Forcing page 1.`);
-
-        // Force reset to page 1
-        setCurrentPage(1);
-        console.warn(`🔄 Resetting to page 1...`);
-
-        // Clear and reinitialize
-        if (apps) apps.innerHTML = "";
-        setTimeout(() => {
-          initialize(); // Recursive call with correct page
-        }, 100);
-        console.groupEnd();
-        return;
-      }
-
-      console.log(
-        `✅ First app correct: ${visibleApps[0].name} (expected app ${expectedFirstApp})`
-      );
+    // 4. Simple verification - just check we have apps
+    if (visibleApps.length === 0 && appList.length > 0) {
+      console.warn(`⚠️ No apps on page ${currentPage}. Resetting to page 1.`);
+      setCurrentPage(1);
+      initialize();
+      console.groupEnd();
+      return;
     }
 
     // 5. Create list items
@@ -133,7 +111,7 @@ export function startApp() {
     // 6. Render pagination (will read currentPage from service.js)
     renderPagination();
 
-    console.log(`✅ Dashboard initialized successfully`);
+    console.debug(`✅ Dashboard initialized successfully`);
     console.groupEnd();
   }
 
@@ -222,7 +200,7 @@ export function startApp() {
   }
 
   // Initialization
-  console.log("Apps => ", getAppList());
+  console.debug("Apps => ", getAppList());
   getSelectedApp();
 
   initPageSizeSelector();
@@ -231,7 +209,7 @@ export function startApp() {
   // Sync All Logic
   function runSyncAllLogic(isManualClick = false) {
     const visibleApps = getAppList();
-    console.log(
+    console.debug(
       `🔄 Syncing ${visibleApps.length} apps on page ${getCurrentPage()}`
     );
 
@@ -377,7 +355,7 @@ export function startApp() {
           isProcessing = false;
           LoadingManager.toggleButtonLoading(btn.id, false);
           count++;
-          console.log(app, "Count => ", count);
+          console.debug(app, "Count => ", count);
         })
         .catch(() => {
           isProcessing = false;
@@ -463,12 +441,12 @@ export function startApp() {
             isProcessing = false;
             LoadingManager.toggleButtonLoading("sync-all", false);
             count++;
-            console.log(app, "Count => ", count);
+            console.debug(app, "Count => ", count);
           });
         });
       };
     } catch (error) {
-      console.log(error);
+      console.error(error);
       toast.error("Sync all failed", 3000);
     }
   }
@@ -586,7 +564,7 @@ export function startApp() {
   };
 
   async function registerApp(appName) {
-    console.log(`📝 Registering App => ${appName}`);
+    console.debug(`📝 Registering App => ${appName}`);
     const appExists = appList.some((app) => app.name === appName);
 
     if (!isAppNameValid(appName)) {
@@ -602,33 +580,7 @@ export function startApp() {
       return false;
     }
 
-    // Check sequential numbering
-    const appNum = parseInt(appName.replace("-app", ""));
-    const existingNumbers = appList.map((a) =>
-      parseInt(a.name.replace("-app", ""))
-    );
-    const maxNum = Math.max(...existingNumbers, 0);
-
-    if (appNum > maxNum + 10) {
-      const nextSuggested = (maxNum + 1).toString().padStart(4, "0");
-
-      const confirmed = await ConfirmDialog.show(
-        `App ${appName} is out of sequence. Next available: ${nextSuggested}-app. Create anyway?`,
-        {
-          title: "Out of Sequence",
-          okText: "Create Anyway",
-          cancelText: "Use Suggested",
-        }
-      );
-
-      if (!confirmed) {
-        // Auto-fill suggested name
-        appNameInput.value = `${nextSuggested}-app`;
-        appNameInput.focus();
-        return false;
-      }
-    }
-
+    // Create app object
     const app = {
       name: appName,
       id: `app-${appName.replace("-app", "")}`,
@@ -636,17 +588,11 @@ export function startApp() {
       createdAt: new Date().toISOString(),
     };
 
-    // Insert in correct sorted position
-    let insertIndex = appList.findIndex((a) => {
-      const num = parseInt(a.name.replace("-app", ""));
-      return num > appNum;
-    });
+    // Just call the function (it doesn't return anything)
+    appRegisterService(app);
 
-    if (insertIndex === -1) insertIndex = appList.length;
-    appList.splice(insertIndex, 0, app);
-
-    // Also update via service for cache initialization
-    setIndividualSync(app.id, false, "");
+    // Calculate the index manually (new app is at the end)
+    const insertIndex = appList.length - 1;
 
     // Calculate which page it belongs on
     const pageSize = getItemsPerPage();
@@ -693,7 +639,7 @@ export function startApp() {
     }
 
     // Log event
-    console.log("App created:", {
+    console.debug("App created:", {
       appName,
       page: correctPage,
       totalApps: appList.length,

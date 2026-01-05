@@ -6,7 +6,26 @@ import data from "./statics/data.js";
 // CORE STATE - SINGLE SOURCE OF TRUTH
 // ============================================================
 
-let appList = data.map((app) => ({ ...app, isSynced: false }));
+let appList = (() => {
+  // Try to load saved apps first
+  const savedApps = localStorage.getItem("user_apps");
+
+  if (savedApps) {
+    try {
+      const parsed = JSON.parse(savedApps);
+      if (parsed.length > 0) {
+        console.debug(`✅ Loaded ${parsed.length} user apps from storage`);
+      }
+      return parsed;
+    } catch (error) {
+      console.error("Failed to load saved apps:", error);
+    }
+  }
+
+  // Fallback to original 100 apps
+  console.debug("📂 Using default 100 apps");
+  return data.map((app) => ({ ...app, isSynced: false }));
+})();
 let selectedApp = null;
 let itemsPerPage = 10;
 let isSyncAllGlobal = false;
@@ -26,9 +45,7 @@ const calculateCurrentPage = () => {
   if (page < 1) page = 1;
   if (page > totalPages) page = totalPages;
 
-  console.log(
-    `📊 Page initialized: ${page}/${totalPages} (saved: ${saved || "none"})`
-  );
+  console.debug(`📊 Page initialized: ${page}/${totalPages}`);
   return page;
 };
 
@@ -60,7 +77,7 @@ const setCurrentPage = (page) => {
   // IMMEDIATE localStorage update
   localStorage.setItem("current_page", validPage.toString());
 
-  console.log(`📍 Page set: ${validPage}/${totalPages}`);
+  console.debug(`📍 Page set: ${validPage}/${totalPages}`);
 };
 
 // ============================================================
@@ -96,6 +113,11 @@ const setIndividualSync = (id, status, data = "") => {
   };
   saveCache(cache);
 
+  // Run cleanup if needed
+  if (Object.keys(cache).length > MAX_CACHE_SIZE * 1.5) {
+    cleanupCache();
+  }
+
   const app = appList.find((a) => a.id === id);
   if (app) app.isSynced = status;
 };
@@ -115,10 +137,10 @@ const setIndividualSync = (id, status, data = "") => {
     }
   });
 
-  console.log(`✅ Restored ${restored} synced apps from cache`);
+  console.debug(`✅ Restored ${restored} synced apps from cache`);
 
   // VERIFICATION: Log current page state
-  console.log(
+  console.debug(
     `🔍 Verification: currentPage=${currentPage}, getCurrentPage()=${getCurrentPage()}`
   );
 })();
@@ -133,7 +155,7 @@ const getAppList = () => {
   const end = start + itemsPerPage;
 
   // DEBUG: Verify slice is correct
-  console.log(
+  console.debug(
     `📄 getAppList() -> Page ${page}: Apps ${start + 1} to ${end} of ${
       appList.length
     }`
@@ -152,7 +174,7 @@ const setItemsPerPage = (size) => {
   localStorage.setItem("items_per_page", size.toString());
   localStorage.setItem("current_page", "1");
 
-  console.log(`📏 Page size changed to: ${size}, reset to page 1`);
+  console.debug(`📏 Page size changed to: ${size}, reset to page 1`);
 };
 
 const getTotalPages = () => Math.ceil(appList.length / itemsPerPage);
@@ -163,6 +185,11 @@ const getTotalPages = () => Math.ceil(appList.length / itemsPerPage);
 
 const appRegisterService = (newApp) => {
   appList.push(newApp);
+
+  // ✅ CRITICAL: Save to localStorage
+  localStorage.setItem("user_apps", JSON.stringify(appList));
+
+  console.debug(`✅ App saved: ${newApp.name} (total: ${appList.length})`);
 };
 
 const updateAppName = (appId, newName) => {
@@ -176,10 +203,44 @@ const updateAppName = (appId, newName) => {
 
 const saveSession = () => localStorage.setItem("isLoggedIn", "true");
 
-const checkSession = () => localStorage.getItem("isLoggedIn") === "true";
+const isTokenValid = () => {
+  const token = localStorage.getItem("app_token");
+  if (!token) return false;
+
+  try {
+    // Decode JWT without verification (just to check expiry)
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const expiry = payload.exp * 1000; // Convert to milliseconds
+    return Date.now() < expiry;
+  } catch {
+    return false;
+  }
+};
+
+const checkAndRefreshToken = async () => {
+  if (!isTokenValid()) {
+    clearSession();
+    return false;
+  }
+  return true;
+};
+
+const checkSession = () => {
+  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+  const tokenValid = isTokenValid();
+
+  // Auto-logout if token is invalid
+  if (isLoggedIn && !tokenValid) {
+    console.warn("Session expired, auto-logging out");
+    clearSession();
+    return false;
+  }
+
+  return isLoggedIn && tokenValid;
+};
 
 const clearSession = () => {
-  console.log("=== LOGGING OUT ===");
+  console.debug("=== LOGGING OUT ===");
 
   // Clear authentication tokens only
   localStorage.removeItem("isLoggedIn");
@@ -188,7 +249,7 @@ const clearSession = () => {
   // Reset to page 1 for next login (clean start)
   setCurrentPage(1);
 
-  console.log("✅ Logout complete. Returning to page 1 next login.");
+  console.debug("✅ Logout complete. Returning to page 1 next login.");
   window.location.href = "/login";
 };
 
@@ -215,6 +276,7 @@ async function authenticate(username, password) {
     }
     return result.success;
   } catch (err) {
+    console.error("Authentication error:", err);
     return false;
   }
 }
@@ -229,6 +291,37 @@ const setSyncAllStatus = (status) => {
 };
 
 // ============================================================
+// CACHE MANAGEMENT (NEW)
+// ============================================================
+
+const MAX_CACHE_SIZE = 100; // Maximum number of cached apps
+
+const cleanupCache = () => {
+  const cache = loadCache();
+  const entries = Object.entries(cache);
+
+  if (entries.length <= MAX_CACHE_SIZE) return;
+
+  // Sort by sync date (oldest first)
+  entries.sort((a, b) => {
+    const dateA = new Date(a[1].syncedAt || 0);
+    const dateB = new Date(b[1].syncedAt || 0);
+    return dateA - dateB;
+  });
+
+  // Remove oldest entries
+  const toRemove = entries.slice(0, entries.length - MAX_CACHE_SIZE);
+  toRemove.forEach(([id]) => delete cache[id]);
+
+  saveCache(cache);
+  console.debug(`🧹 Cache cleaned: removed ${toRemove.length} old entries`);
+};
+
+// ============================================================
+// CONSOLE MANAGEMENT (NEW)
+// ============================================================
+
+// ============================================================
 // PAGE VERIFICATION FUNCTION (NEW)
 // ============================================================
 
@@ -237,11 +330,11 @@ const verifyPageState = () => {
   const currentPageValue = getCurrentPage();
   const totalPages = getTotalPages();
 
-  console.log(`🔍 Page State Verification:`);
-  console.log(`   localStorage: ${storedPage || "none"}`);
-  console.log(`   currentPage: ${currentPageValue}`);
-  console.log(`   totalPages: ${totalPages}`);
-  console.log(
+  console.debug(`🔍 Page State Verification:`);
+  console.debug(`   localStorage: ${storedPage || "none"}`);
+  console.debug(`   currentPage: ${currentPageValue}`);
+  console.debug(`   totalPages: ${totalPages}`);
+  console.debug(
     `   Valid: ${currentPageValue >= 1 && currentPageValue <= totalPages}`
   );
 
@@ -252,20 +345,35 @@ const verifyPageState = () => {
   }
 };
 
+// ============================================================
+// MAINTENANCE & STARTUP (NEW)
+// ============================================================
+
+// Start maintenance tasks after everything loads
+setTimeout(() => {
+  // Initial cache cleanup
+  cleanupCache();
+
+  // Periodic cleanup every hour
+  setInterval(cleanupCache, 60 * 60 * 1000);
+
+  console.debug("🛠️ Maintenance tasks initialized");
+}, 2000);
+
 // Run verification after everything loads
 setTimeout(verifyPageState, 100);
 
 // DEBUG FUNCTION: Test page state
 window.debugPageState = () => {
   console.group("🔬 PAGE STATE DEBUG");
-  console.log(
+  console.debug(
     "1. localStorage current_page:",
     localStorage.getItem("current_page")
   );
-  console.log("2. service.currentPage variable:", currentPage);
-  console.log("3. getCurrentPage() function:", getCurrentPage());
-  console.log("4. getAppList() first app:", getAppList()[0]?.name);
-  console.log(
+  console.debug("2. service.currentPage variable:", currentPage);
+  console.debug("3. getCurrentPage() function:", getCurrentPage());
+  console.debug("4. getAppList() first app:", getAppList()[0]?.name);
+  console.debug(
     "5. Expected first app for page",
     getCurrentPage(),
     ":",
@@ -281,7 +389,7 @@ window.debugPageState = () => {
     console.error(`❌ MISMATCH! Expected: ${expected}, Got: ${actual}`);
     console.error("Run: setCurrentPage(1) to reset");
   } else {
-    console.log(`✅ CORRECT! Page ${getCurrentPage()} shows ${actual}`);
+    console.debug(`✅ CORRECT! Page ${getCurrentPage()} shows ${actual}`);
   }
 };
 
@@ -312,4 +420,7 @@ export {
   getSyncData,
   setIndividualSync,
   verifyPageState,
+  isTokenValid,
+  checkAndRefreshToken,
+  cleanupCache,
 };

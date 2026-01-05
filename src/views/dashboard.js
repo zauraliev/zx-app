@@ -1,5 +1,11 @@
 import { startApp } from "../app-init.js";
-import { appList, getSyncData, getCurrentPage, getTotalPages } from "../service.js";
+import {
+  appList,
+  getSyncData,
+  getCurrentPage,
+  getTotalPages,
+  setCurrentPage,
+} from "../service.js";
 
 // views/dashboard.js
 export function renderDashboard() {
@@ -58,16 +64,16 @@ export function renderDashboard() {
 }
 
 export function initDashboard() {
-  console.log("🎯 Dashboard starting...");
+  console.debug("🎯 Dashboard starting...");
 
   // FIXED: Verify page state before starting
   setTimeout(() => {
     const currentPage = getCurrentPage();
     const totalPages = getTotalPages();
 
-    console.log(`📌 Dashboard Load Verification:`);
-    console.log(`   Page: ${currentPage}/${totalPages}`);
-    console.log(
+    console.debug(`📌 Dashboard Load Verification:`);
+    console.debug(`   Page: ${currentPage}/${totalPages}`);
+    console.debug(
       `   localStorage page: ${localStorage.getItem("current_page")}`
     );
 
