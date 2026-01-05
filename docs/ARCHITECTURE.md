@@ -47,7 +47,8 @@ app-registration-spa/
 │   ├── DEPLOYMENT.md           # Deployment instructions
 │   ├── DEVELOPMENT.md          # Development setup & workflow
 │   ├── SYNC_SYSTEM.md          # Sync system architecture
-│   └── UI_HELPERS.md           # UI utilities documentation
+│   ├── UI_HELPERS.md           # UI utilities documentation
+|   └── CHANGELOG.md            # NEW - Version history
 ├── 📁 __mocks__/               # Jest mocks (optional)
 ├── 📄 .babelrc                 # Babel configuration
 ├── 📄 .gitignore               # Git ignore rules
