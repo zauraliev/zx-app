@@ -12,12 +12,12 @@ export default function handler(req, res) {
 
   const { username } = req.body;
 
- const incomingHash = req.body.password?.trim().toLowerCase();
- const storedHash = process.env.AUTH_PASS?.trim();
+  const incomingHash = req.body.password?.trim().toLowerCase();
+  const storedHash = process.env.AUTH_PASS?.trim();
 
- // Compare Boolean without logging the strings
- const isMatch = incomingHash === storedHash;
- console.log("DOES IT MATCH? ->", isMatch);
+  // Compare Boolean without logging the strings
+  const isMatch = incomingHash === storedHash;
+  console.log("DOES IT MATCH? ->", isMatch);
 
   /**
    * 2. Environment Variables (Injected by DotenvX)
@@ -56,6 +56,10 @@ export default function handler(req, res) {
     return res.status(200).json({
       success: true,
       token,
+      user: {
+        username,
+        email: `${username}@company.com`, // In real app, get from DB
+      },
     });
   } else {
     // 6. Unauthorized Response

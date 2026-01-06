@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.4 - 2025-01-06
+### Added
+- User profile dropdown module in navbar
+- GitHub-inspired design with monotone icons
+- Profile menu with settings and logout
+
 ## v1.1.3 (2025-01-04)
 
 ### Added

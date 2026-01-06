@@ -1,3 +1,4 @@
+// router.js - Complete updated file
 import { renderHome, initHome } from "./views/home.js";
 import { renderLogin, initLogin } from "./views/login.js";
 import { renderDashboard, initDashboard } from "./views/dashboard.js";
@@ -16,6 +17,28 @@ const routes = {
   "/404": { protected: false, render: () => `<h1>404 Not Found</h1>` },
 };
 
+// Lazy load profile manager to avoid circular deps
+let profileManagerLoaded = false;
+let profileManager = null;
+
+function loadProfileManager() {
+  if (!profileManagerLoaded) {
+    import("./util/profile-manager.js")
+      .then((module) => {
+        profileManager = module.profileManager;
+        profileManagerLoaded = true;
+      })
+      .catch((err) => {
+        console.warn("Profile manager failed to load:", err);
+      });
+  }
+}
+
+// Load profile manager early if user might be logged in
+if (typeof window !== "undefined" && checkSession()) {
+  loadProfileManager();
+}
+
 /**
  * NEW: navigateTo helper
  * Updates the URL and triggers a re-render in one step.
@@ -28,6 +51,7 @@ export function navigateTo(path) {
   router(path);
 }
 window.navigateTo = navigateTo;
+
 /**
  * REWRITTEN: router function
  * Handles path matching, security guards, and DOM injection.
@@ -52,18 +76,34 @@ export function router(path = window.location.pathname) {
 
   // 3. Smart Auth Guards (Use return to exit function)
   if (route.protected && !isLoggedIn) {
-    return navigateTo("/login"); // Fixed: now navigateTo checks for loops
+    return navigateTo("/login");
   }
   if (cleanPath === "/login" && isLoggedIn) {
     return navigateTo("/dashboard");
   }
 
   // 4. Update UI
-  renderNavbar(isLoggedIn); // Safe now due to status check above
+  renderNavbar(isLoggedIn);
   const container = document.getElementById("container");
   container.innerHTML = route.render();
   route.init?.();
+
+  // 5. Initialize profile module AFTER DOM is updated
+  if (isLoggedIn) {
+    // Load profile manager if not already loaded
+    if (!profileManagerLoaded) {
+      loadProfileManager();
+    }
+
+    // Initialize after a short delay to ensure DOM is ready
+    setTimeout(() => {
+      if (profileManager) {
+        profileManager.initialize();
+      }
+    }, 100);
+  }
 }
+
 function renderNavbar(isLoggedIn) {
   let nav = document.getElementById("main-nav");
 
@@ -76,7 +116,6 @@ function renderNavbar(isLoggedIn) {
   }
 
   // 2. ONLY re-render content if the login status has changed
-  // This prevents the 'Throttling' loop by stopping unnecessary DOM updates
   const currentStatus = isLoggedIn ? "in" : "out";
   if (nav.dataset.status === currentStatus) return;
 
@@ -89,8 +128,6 @@ function renderNavbar(isLoggedIn) {
         isLoggedIn
           ? `
         <li data-link="/dashboard">Dashboard</li>
-        <li data-link="/settings">Settings</li>
-        <li id="nav-logout" class="logout-link">Logout</li>
       `
           : `
         <li data-link="/login">Login</li>
@@ -104,22 +141,16 @@ function renderNavbar(isLoggedIn) {
   if (isLoggedIn) attachLogoutListener();
 }
 
-
 function initNavbar() {
   const nav = document.getElementById("main-nav");
   if (!nav) return;
 
   // Remove old listener if it exists to prevent double-firing
-  // (Standard practice in 2025 for dynamic DOM elements)
   nav.onclick = (e) => {
-    // 1. Find the element that was clicked, or its closest parent with data-link
-    // This allows clicking on text inside an <li> to still work
     const link = e.target.closest("[data-link]");
 
     if (link) {
       const path = link.getAttribute("data-link");
-
-      // 2. Use your navigateTo helper to change the view
       navigateTo(path);
     }
   };
@@ -130,16 +161,9 @@ function attachLogoutListener() {
   const logoutBtn = document.getElementById("nav-logout");
   if (logoutBtn) {
     logoutBtn.onclick = (e) => {
-      e.stopPropagation(); // Prevent the nav.onclick delegation from firing
+      e.stopPropagation();
       clearSession();
       navigateTo("/login");
     };
   }
 }
-
-
-
-
-
-
-
