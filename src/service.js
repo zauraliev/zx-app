@@ -245,6 +245,9 @@ const clearSession = () => {
   // Clear authentication tokens only
   localStorage.removeItem("isLoggedIn");
   localStorage.removeItem("app_token");
+  localStorage.removeItem("username");
+  localStorage.removeItem("user_email");
+
 
   // Reset to page 1 for next login (clean start)
   setCurrentPage(1);
@@ -273,10 +276,12 @@ async function authenticate(username, password) {
     if (result.success && result.token) {
       localStorage.setItem("app_token", result.token);
       saveSession();
+      // Store user data for profile
+      localStorage.setItem("username", username);
+      localStorage.setItem("user_email", `zaur_aliev@hotmail.com`); // In real app, get from API
     }
     return result.success;
   } catch (err) {
-    console.error("Authentication error:", err);
     return false;
   }
 }

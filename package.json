@@ -1,8 +1,8 @@
 {
   "name": "zx-app",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "type": "module",
-  "description": "App is for practicing the advanced Git commands",
+  "description": "A production-ready Single Page Application for managing application registrations with secure authentication, real-time sync, and persistent state management.",
   "productName": "ZX App",
   "author": "Zaur <zaur_aliev@hotmail.com>",
   "keywords": [],

@@ -241,6 +241,7 @@ h2 {
   position: sticky;
   top: 0;
   z-index: 1000;
+  padding: 0px 10px 0px 20px;
 
   .logo {
     font-weight: bold;
@@ -252,6 +253,8 @@ h2 {
     display: flex;
     gap: 20px;
     list-style: none;
+    top: 12px;
+    position: relative;
 
     li {
       cursor: pointer;
@@ -295,7 +298,7 @@ h2 {
 // ============================================
 #toast-container {
   position: fixed;
-  top: 20px;
+  top: 90px;
   right: 20px;
   z-index: 9999;
   display: flex;
@@ -595,4 +598,195 @@ h2 {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+// ============================================
+// PROFILE MODULE
+// ============================================
+
+.profile-avatar-container {
+  margin-left: 20px;
+  position: relative;
+  top: -10px;
+}
+
+.profile-avatar-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+
+  &:focus {
+    outline: 2px solid #2a313c;
+    outline-offset: 2px;
+  }
+}
+
+.navbar-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2a313c, #2a313c);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.profile-dialog {
+  position: absolute;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  width: 320px;
+  z-index: 10001;
+  border: 1px solid #d1d5da;
+  overflow: hidden;
+
+  &.hidden {
+    display: none;
+  }
+}
+
+.profile-header {
+  display: flex;
+  padding: 20px;
+  align-items: center;
+  background: #f6f8fa;
+  border-bottom: 1px solid #e1e4e8;
+}
+
+.avatar-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2a313c, #2a313c);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+  margin-right: 16px;
+}
+
+.profile-info {
+  flex: 1;
+}
+
+.profile-name {
+  font-weight: 600;
+  font-size: 16px;
+  color: #24292e;
+  margin-bottom: 4px;
+}
+
+.profile-email {
+  font-size: 14px;
+  color: #2a313c;
+}
+
+.profile-divider {
+  height: 1px;
+  background: #e1e4e8;
+  margin: 0;
+}
+
+.profile-menu {
+  padding: 8px 0;
+}
+
+.profile-menu-item {
+  width: 100%;
+  padding: 12px 20px;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  text-align: left;
+  color: #24292e;
+  font-size: 14px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #f6f8fa;
+  }
+
+  &:focus {
+    outline: none;
+    background-color: #f6f8fa;
+  }
+}
+
+.profile-menu-icon {
+  margin-right: 12px;
+  font-size: 18px;
+  -webkit-text-stroke: 1.5px #2a313c;
+  width: 24px;
+  text-align: center;
+  color: #2a313c;
+  filter: grayscale(100%) opacity(0.9);
+}
+
+.profile-menu-text {
+  flex: 1;
+}
+
+.profile-menu-item[data-action="logout"] {
+  color: #d73a49;
+
+  &:hover {
+    background-color: #faf5f5;
+  }
+
+  .profile-menu-icon {
+    color: #d73a49;
+  }
+}
+
+.profile-footer {
+  border-top: 1px solid #e1e4e8;
+  padding: 12px 20px;
+}
+
+.profile-plan {
+  background: #f6f8fa;
+  color: #2a313c;
+  border: 1px solid #e1e4e8;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+// Animation for dialog
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.profile-dialog:not(.hidden) {
+  animation: slideDown 0.2s ease;
 }
