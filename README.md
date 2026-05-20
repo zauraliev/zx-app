@@ -261,7 +261,7 @@ Open a Pull Request
 - Follow existing code patterns
 
 ## 📞 Support
-- Issues: GitHub Issues
+- Issues: GitHub Issues*
 
 - Documentation: /docs directory
 
